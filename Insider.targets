@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    
+    <PropertyGroup>
+        <InsiderPath>$(MSBuildThisFileDirectory)..\</InsiderPath>
+        <InsiderTargetPath>@(IntermediateAssembly->'%(FullPath).temp')</InsiderTargetPath>
+    </PropertyGroup>
+    
+    <Target Name="InsiderWeaving" AfterTargets="AfterCompile">
+        <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+          <InsiderCommand>"$(MSBuildThisFileDirectory)..\Insider.exe"</InsiderCommand>
+        </PropertyGroup>
+
+        <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
+          <InsiderCommand>mono "$(MSBuildThisFileDirectory)../Insider.exe"</InsiderCommand>
+        </PropertyGroup>
+    
+        <Exec Command="$(InsiderCommand) &quot;@(IntermediateAssembly)&quot; &quot;$(InsiderTargetPath)&quot; &quot;@(ReferencePath)&quot;" />
+        
+        <Copy SourceFiles="$(InsiderTargetPath)"
+              DestinationFiles="@(IntermediateAssembly)" 
+              OverwriteReadOnlyFiles="True" />
+    </Target>
+    
+    <!--<UsingTask TaskName="Insider.WeaveTask" AssemblyFile="$(InsiderPath)Insider.exe" />
+    
+    <Target Name="InsiderWeaving" AfterTargets="AfterCompile"
+            Inputs="@(IntermediateAssembly)" Outputs="$(TargetPath)">
+        <Insider.WeaveTask TargetAssembly="@(IntermediateAssembly)"
+                           TargetReferences="@(ReferencePath)"
+                           Configuration="$(ConfigurationName)"/>
+    </Target>-->
+    
+</Project>

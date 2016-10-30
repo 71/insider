@@ -1,0 +1,108 @@
+﻿using Mono.Cecil;
+using Mono.Cecil.Cil;
+
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text.RegularExpressions" #>
+
+namespace Insider
+{
+    /// <summary>
+    /// Quick and easy access to IL methods.
+    /// </summary>
+    public static partial class IL
+    {
+        // Instructions found on https://en.wikipedia.org/wiki/List_of_CIL_instructions
+        // Then a little JS script to extract them
+        // Now I only need to class them below
+        <#
+        Func<string, string> Classify = (ins) =>
+        {
+            if (ins.Contains("<int32"))
+                return "int nbr";
+            else if (ins.Contains("<int64"))
+                return "long nbr";
+            else if (ins.Contains("<float32"))
+                return "float nbr";
+            else if (ins.Contains("<float64"))
+                return "double nbr";
+            else if (ins.Contains("<uint8"))
+                return "byte nbr";
+            else if (ins.Contains("<int8"))
+                return "sbyte nbr";
+            else if (ins.Contains("<field"))
+                return "string str";
+
+            else if (ins.Contains("<field"))
+                return "FieldReference field";
+            else if (ins.Contains("<method"))
+                return "MethodReference method";
+            else if (ins.Contains("<class"))
+                return "TypeReference type";
+
+            else if (ins.Contains("<param"))
+                return "ParameterDefinition parameter";
+            else if (ins.Contains("<var"))
+                return "VariableDefinition variable";
+
+            else if (ins.Contains("<call"))
+                return "CallSite call";
+            else if (ins.Contains("<ins"))
+                return "Instruction ins";
+            else if (ins.Contains("<ins"))
+                return "params Instruction[] instruction";
+
+            else if (ins.Contains("<"))
+                return "SKIP";
+            else
+                return "";
+        };
+
+        Func<string, string> ConvertName = (string name) =>
+        {
+            return Regex.Replace(
+                Regex.Replace(name.Replace('.', '_'), @" <.+>", ""),
+                @"(?:_|^)(\w)", match => match.Value.ToUpper()
+            ).TrimEnd('_');
+        };
+
+        string[] allOpCodes = new []
+            { "add","add.ovf","add.ovf.un","and","arglist","beq <int32 (target)>","beq.s <int8 (target)>","bge <int32 (target)>","bge.s <int8 (target)>","bge.un <int32 (target)>","bge.un.s <int8 (target)>","bgt <int32 (target)>","bgt.s <int8 (target)>","bgt.un <int32 (target)>","bgt.un.s <int8 (target)>","ble <int32 (target)>","ble.s <int8 (target)>","ble.un <int32 (target)>","ble.un.s <int8 (target)>","blt <int32 (target)>","blt.s <int8 (target)>","blt.un <int32 (target)>","blt.un.s <int8 (target)>","bne.un <int32 (target)>","bne.un.s <int8 (target)>","box <typeTok>","br <int32 (target)>","br.s <int8 (target)>","break","brfalse <int32 (target)>","brfalse.s <int8 (target)>","brinst <int32 (target)>","brinst.s <int8 (target)>","brnull <int32 (target)>","brnull.s <int8 (target)>","brtrue <int32 (target)>","brtrue.s <int8 (target)>","brzero <int32 (target)>","brzero.s <int8 (target)>","call <method>","calli <callsitedescr>","callvirt <method>","castclass <class>","ceq","cgt","cgt.un","ckfinite","clt","clt.un","constrained. <thisType>","conv.i","conv.i1","conv.i2","conv.i4","conv.i8","conv.ovf.i","conv.ovf.i.un","conv.ovf.i1","conv.ovf.i1.un","conv.ovf.i2","conv.ovf.i2.un","conv.ovf.i4","conv.ovf.i4.un","conv.ovf.i8","conv.ovf.i8.un","conv.ovf.u","conv.ovf.u.un","conv.ovf.u1","conv.ovf.u1.un","conv.ovf.u2","conv.ovf.u2.un","conv.ovf.u4","conv.ovf.u4.un","conv.ovf.u8","conv.ovf.u8.un","conv.r.un","conv.r4","conv.r8","conv.u","conv.u1","conv.u2","conv.u4","conv.u8","cpblk","cpobj <typeTok>","div","div.un","dup","endfault","endfilter","endfinally","initblk","initobj <typeTok>","isinst <class>","jmp <method>","ldarg <uint16 (num)>","ldarg.0","ldarg.1","ldarg.2","ldarg.3","ldarg.s <uint8 (num)>","ldarga <uint16 (argNum)>","ldarga.s <uint8 (argNum)>","ldc.i4 <int32 (num)>","ldc.i4.0","ldc.i4.1","ldc.i4.2","ldc.i4.3","ldc.i4.4","ldc.i4.5","ldc.i4.6","ldc.i4.7","ldc.i4.8","ldc.i4.m1","ldc.i4.s <int8 (num)>","ldc.i8 <int64 (num)>","ldc.r4 <float32 (num)>","ldc.r8 <float64 (num)>","ldelem <typeTok>","ldelem.i","ldelem.i1","ldelem.i2","ldelem.i4","ldelem.i8","ldelem.r4","ldelem.r8","ldelem.ref","ldelem.u1","ldelem.u2","ldelem.u4","ldelem.u8","ldelema <class>","ldfld <field>","ldflda <field>","ldftn <method>","ldind.i","ldind.i1","ldind.i2","ldind.i4","ldind.i8","ldind.r4","ldind.r8","ldind.ref","ldind.u1","ldind.u2","ldind.u4","ldind.u8","ldlen","ldloc <uint16 (indx)>","ldloc.0","ldloc.1","ldloc.2","ldloc.3","ldloc.s <uint8 (indx)>","ldloca <uint16 (indx)>","ldloca.s <uint8 (indx)>","ldnull","ldobj <typeTok>","ldsfld <field>","ldsflda <field>","ldstr <string>","ldtoken <token>","ldvirtftn <method>","leave <int32 (target)>","leave.s <int8 (target)>","localloc","mkrefany <class>","mul","mul.ovf","mul.ovf.un","neg","newarr <etype>","newobj <ctor>","nop","not","or","pop","readonly.","refanytype","refanyval <type>","rem","rem.un","ret","rethrow","shl","shr","shr.un","sizeof <typeTok>","starg <uint16 (num)>","starg.s <uint8 (num)>","stelem <typeTok>","stelem.i","stelem.i1","stelem.i2","stelem.i4","stelem.i8","stelem.r4","stelem.r8","stelem.ref","stfld <field>","stind.i","stind.i1","stind.i2","stind.i4","stind.i8","stind.r4","stind.r8","stind.ref","stloc <uint16 (indx)>","stloc.0","stloc.1","stloc.2","stloc.3","stloc.s <uint8 (indx)>","stobj <typeTok>","stsfld <field>","sub","sub.ovf","sub.ovf.un","switch <uint32, int32, int32 (t1..tN)>","tail.","throw","unaligned. (alignment)","unbox <valuetype>","unbox.any <typeTok>","volatile.","xor" };
+        string[] blacklist = new []
+            { "Brinst", "Brnull", "Brzero", "Endfault", "Ldelem_U8", "Ldind_U8", "Unaligned" };
+
+
+        foreach (var ins in allOpCodes.ToLookup(Classify)
+                                      .Where(x => x.Key != "SKIP"))
+        {
+            string varname = ins.Key == "" ? "" : ',' + ins.Key.Substring(ins.Key.LastIndexOf(' '));
+            
+            #>
+
+        #region <#=ins.Key#>
+            <#
+            foreach (string op in ins)
+            {
+                string opcode = ConvertName(op);
+                if (blacklist.Any(x => opcode.StartsWith(x)))
+                    continue;
+                
+                #>
+
+        /// <summary>
+        /// Create a new <see cref="Instruction"/> which emits
+        /// <see cref="OpCodes.<#=opcode#>"/>.
+        /// </summary>
+        public static Instruction <#=opcode#>(<#=ins.Key#>)
+            => Instruction.Create(OpCodes.<#=opcode#><#=varname#>);
+                <#
+            }
+        #>
+        #endregion // <#=ins.Key#>
+        <#
+        }
+        #>
+
+    }
+}
