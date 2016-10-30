@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Mono.Cecil;
-using R = System.Reflection;
+using SR = System.Reflection;
 
 namespace Insider
 {
     /// <summary>
     /// Class used to weave modules.
     /// </summary>
+    [Serializable]
     public sealed partial class Weaver : IDisposable
     {
         /// <summary>
@@ -20,7 +21,7 @@ namespace Insider
         /// <summary>
         /// Assembly being woven.
         /// </summary>
-        public readonly R.Assembly Assembly;
+        public readonly SR.Assembly Assembly;
 
         /// <summary>
         /// Settings set by the assembly being woven.
@@ -46,9 +47,9 @@ namespace Insider
 
         /// <summary>
         /// Collection of all assemblies referenced, classed by name
-        /// (<see cref="R.AssemblyName.Name"/>).
+        /// (<see cref="SR.AssemblyName.Name"/>).
         /// </summary>
-        private readonly Dictionary<string, Tuple<R.Assembly, AssemblyDefinition>> Assemblies;
+        private readonly Dictionary<string, Tuple<SR.Assembly, AssemblyDefinition>> Assemblies;
 
         /// <summary>
         /// <see cref="Delegate"/> that calls <see cref="LogMessage(string, MessageImportance)"/>.
@@ -56,6 +57,11 @@ namespace Insider
         private Delegate LogMessageDelegate;
 
         private readonly AppDomain ProcessDomain;
+        private readonly AppDomainSetup ProcessDomainSetup;
+
+        private readonly DomainProxy Proxy;
+
+        private readonly string[] ReferencedAssemblies;
 
         /// <summary>
         /// Initialize a new <see cref="Weaver"/>, given the path to the
@@ -65,8 +71,23 @@ namespace Insider
         /// <param name="referencedFiles">Absolute paths of the files referenced by the assembly to weave</param>
         public Weaver(string filepath, string targetpath, params string[] referencedFiles)
         {
-            ProcessDomain = AppDomain.CreateDomain("Insider weaving domain");
-            ProcessDomain.ExecuteAssembly()
+            filepath = Path.GetFullPath(filepath);
+            targetpath = Path.GetFullPath(targetpath);
+
+            ReferencedAssemblies = referencedFiles;
+
+            ProcessDomainSetup = new AppDomainSetup();
+
+            ProcessDomain = AppDomain.CreateDomain("Insider's Weaving domain", AppDomain.CurrentDomain.Evidence, ProcessDomainSetup);
+            ProcessDomain.AssemblyResolve += DomainResolveAssembly;
+
+            Proxy = (DomainProxy)ProcessDomain.CreateInstanceFromAndUnwrap(
+                typeof(DomainProxy).Assembly.Location,
+                typeof(DomainProxy).FullName);
+
+            ProcessDomainSetup.ApplicationBase = Path.GetDirectoryName(filepath);
+
+
             // Since it is not possible to both unload an Assembly
             // and load its type, it has to be copied before being read.
             string assemblyPath = filepath + ".weaving";
@@ -76,9 +97,9 @@ namespace Insider
 
             // Resolve assembly, module, and initialize settings
             Module = ModuleDefinition.ReadModule(filepath, new ReaderParameters { InMemory = true });
-            Assembly = R.Assembly.LoadFrom(assemblyPath);
+            Assembly = ImportAssembly(filepath);
 
-            Assemblies = new Dictionary<string, Tuple<R.Assembly, AssemblyDefinition>>();
+            Assemblies = new Dictionary<string, Tuple<SR.Assembly, AssemblyDefinition>>();
             Settings = new Dictionary<string, object>();
 
             // Set local Weave properties
@@ -94,10 +115,11 @@ namespace Insider
                 // be cast from one assembly to the other!!
                 // Looks like LoadFrom() "breaks" the already loaded types.
                 // <3 http://stackoverflow.com/a/8059052/5117446 <3
-                if (referencedFile.EndsWith("Mono.Cecil.dll"))
-                    continue;
 
-                var assembly = R.Assembly.LoadFrom(referencedFile);
+                //if (referencedFile.EndsWith("Mono.Cecil.dll"))
+                //    continue;
+                
+                var assembly = ImportAssembly(referencedFile);
                 var assemblyDef = AssemblyDefinition.ReadAssembly(referencedFile);
 
                 ImportDefaultSettings(assemblyDef.MainModule);
@@ -109,6 +131,52 @@ namespace Insider
             ImportAssemblySettings(Module.Assembly);
         }
 
+        private SR.Assembly DomainResolveAssembly(object sender, ResolveEventArgs args)
+        {
+            SR.AssemblyName assemblyName = new SR.AssemblyName(args.Name);
+            string name = assemblyName.Name;
+
+            switch (name)
+            {
+                case "Mono.Cecil":
+                    return typeof(ModuleDefinition).Assembly;
+                case "Mono.Cecil.Rocks":
+                    return typeof(Mono.Cecil.Rocks.ILParser).Assembly;
+                case "Mono.Cecil.Pdb":
+                    return typeof(Mono.Cecil.Pdb.PdbReader).Assembly;
+                case "Mono.Cecil.Mdb":
+                    return typeof(Mono.Cecil.Mdb.MdbReader).Assembly;
+            }
+
+            for (int i = 0; i < ReferencedAssemblies.Length; i++)
+            {
+                if (ReferencedAssemblies[i].Contains(name + ".dll"))
+                {
+                    return ImportAssembly(ReferencedAssemblies[i]);
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Import an assembly, and its settings.
+        /// </summary>
+        /// <param name="assemblyPath">The path to the file in which the Assembly is located</param>
+        private SR.Assembly ImportAssembly(string assemblyPath)
+        {
+            return Proxy.GetAssembly(assemblyPath);
+            //byte[] assemblyBytes = File.ReadAllBytes(assemblyPath);
+            //string pdbPath, mdbPath;
+
+            //if (File.Exists((pdbPath = Path.ChangeExtension(assemblyPath, "pdb"))))
+            //    return SR.Assembly.Load(assemblyBytes, File.ReadAllBytes(pdbPath));
+            //else if (File.Exists((mdbPath = Path.ChangeExtension(assemblyPath, "mdb"))))
+            //    return SR.Assembly.Load(assemblyBytes, File.ReadAllBytes(mdbPath));
+            //else
+            //    return SR.Assembly.Load(assemblyBytes);
+        }
+        
         /// <summary>
         /// Scan an <see cref="AssemblyDefinition"/>'s custom attributes
         /// for a <see cref="InsiderSettingAttribute"/>.
@@ -173,7 +241,7 @@ namespace Insider
         /// and <see cref="Weave.CurrentAssemblyDef"/> properties of a
         /// given assembly.
         /// </summary>
-        private void SetAssemblyWeave(AssemblyDefinition assemblyDef, R.Assembly assembly)
+        private void SetAssemblyWeave(AssemblyDefinition assemblyDef, SR.Assembly assembly)
         {
             Type weaveType = assembly.GetType(nameof(Weave));
 

@@ -29,7 +29,7 @@ namespace Insider
                 {
                     weaver.Process();
                 }
-                catch (Exception) { EncounteredError = true; }
+                catch (Exception e) { EncounteredError = true; }
             }
 
             return EncounteredError ? 1 : 0;

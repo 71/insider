@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Mono.Cecil;
+using SR = System.Reflection;
 
 namespace Insider
 {
@@ -73,6 +74,22 @@ namespace Insider
                 return Assemblies[type.Module.Assembly.GetName().Name].Item2.MainModule.GetType(type.FullName);
 
             return Module.GetType(type.FullName);
+        }
+
+
+        class DomainProxy : MarshalByRefObject
+        {
+            public SR.Assembly GetAssembly(string assemblyPath)
+            {
+                try
+                {
+                    return SR.Assembly.LoadFrom(assemblyPath);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException(ex.Message, ex);
+                }
+            }
         }
     }
 }
