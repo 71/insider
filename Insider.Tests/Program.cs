@@ -34,16 +34,17 @@ namespace Insider.Tests
     {
         static void Main(string[] args)
         {
-            ChangeInt();
-            ChangeString();
+
         }
 
+        [Test("The insider will all 1's to 2's")]
         [OpCodeReplacer(Code.Ldc_I4_1, Code.Ldc_I4_2)]
         static void ChangeInt()
         {
             (int.Parse("1") + 1).ShouldNotBe(2);
         }
 
+        [Test("The insider will change the first string to another one")]
         [ChangeString]
         static void ChangeString()
         {

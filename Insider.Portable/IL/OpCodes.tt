@@ -31,7 +31,7 @@ namespace Insider
                 return "byte nbr";
             else if (ins.Contains("<int8"))
                 return "sbyte nbr";
-            else if (ins.Contains("<field"))
+            else if (ins.Contains("<string"))
                 return "string str";
 
             else if (ins.Contains("<field"))

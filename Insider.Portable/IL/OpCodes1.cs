@@ -1359,49 +1359,59 @@ namespace Insider
             => Instruction.Create(OpCodes.Ldc_R8, nbr);
                         #endregion // double nbr
         
-        #region string str
+        #region FieldReference field
             
         /// <summary>
         /// Create a new <see cref="Instruction"/> which emits
         /// <see cref="OpCodes.Ldfld"/>.
         /// </summary>
-        public static Instruction Ldfld(string str)
-            => Instruction.Create(OpCodes.Ldfld, str);
+        public static Instruction Ldfld(FieldReference field)
+            => Instruction.Create(OpCodes.Ldfld, field);
                 
         /// <summary>
         /// Create a new <see cref="Instruction"/> which emits
         /// <see cref="OpCodes.Ldflda"/>.
         /// </summary>
-        public static Instruction Ldflda(string str)
-            => Instruction.Create(OpCodes.Ldflda, str);
+        public static Instruction Ldflda(FieldReference field)
+            => Instruction.Create(OpCodes.Ldflda, field);
                 
         /// <summary>
         /// Create a new <see cref="Instruction"/> which emits
         /// <see cref="OpCodes.Ldsfld"/>.
         /// </summary>
-        public static Instruction Ldsfld(string str)
-            => Instruction.Create(OpCodes.Ldsfld, str);
+        public static Instruction Ldsfld(FieldReference field)
+            => Instruction.Create(OpCodes.Ldsfld, field);
                 
         /// <summary>
         /// Create a new <see cref="Instruction"/> which emits
         /// <see cref="OpCodes.Ldsflda"/>.
         /// </summary>
-        public static Instruction Ldsflda(string str)
-            => Instruction.Create(OpCodes.Ldsflda, str);
+        public static Instruction Ldsflda(FieldReference field)
+            => Instruction.Create(OpCodes.Ldsflda, field);
                 
         /// <summary>
         /// Create a new <see cref="Instruction"/> which emits
         /// <see cref="OpCodes.Stfld"/>.
         /// </summary>
-        public static Instruction Stfld(string str)
-            => Instruction.Create(OpCodes.Stfld, str);
+        public static Instruction Stfld(FieldReference field)
+            => Instruction.Create(OpCodes.Stfld, field);
                 
         /// <summary>
         /// Create a new <see cref="Instruction"/> which emits
         /// <see cref="OpCodes.Stsfld"/>.
         /// </summary>
-        public static Instruction Stsfld(string str)
-            => Instruction.Create(OpCodes.Stsfld, str);
+        public static Instruction Stsfld(FieldReference field)
+            => Instruction.Create(OpCodes.Stsfld, field);
+                        #endregion // FieldReference field
+        
+        #region string str
+            
+        /// <summary>
+        /// Create a new <see cref="Instruction"/> which emits
+        /// <see cref="OpCodes.Ldstr"/>.
+        /// </summary>
+        public static Instruction Ldstr(string str)
+            => Instruction.Create(OpCodes.Ldstr, str);
                         #endregion // string str
         
     }
