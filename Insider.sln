@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Insider", "Insider\Insider.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Insider.Portable", "Insider.Portable\Insider.Portable.csproj", "{1F0DD5EE-DE10-41A6-8E66-16819077F898}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Shared", "Shared\Shared.shproj", "{F6F34D5C-6096-4D93-887A-8474770148FE}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Insider.Shared", "Insider.Shared\Insider.Shared.shproj", "{F6F34D5C-6096-4D93-887A-8474770148FE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Insider.Tests", "Insider.Tests\Insider.Tests.csproj", "{FBBF181D-4266-42CB-9A43-048A93517749}"
 EndProject
