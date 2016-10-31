@@ -83,6 +83,11 @@ namespace Insider
             Assemblies = new Dictionary<string, Tuple<SR.Assembly, AssemblyDefinition>>();
             Settings = new Dictionary<string, object>();
 
+            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+
+            SR.Assembly insiderAssembly = SR.Assembly.GetExecutingAssembly();
+            Assemblies.Add(ASSEMBLY_NAME, Tuple.Create(insiderAssembly, AssemblyDefinition.ReadAssembly(insiderAssembly.Location)));
+
             // Set local Weave properties
             Weave.CurrentAssembly = Assembly;
             Weave.CurrentAssemblyDef = Module.Assembly;
@@ -100,14 +105,26 @@ namespace Insider
 
                 ImportDefaultSettings(assemblyDef.MainModule);
                 ImportAssemblySettings(assemblyDef);
+                SetAssemblyWeave(assemblyDef, assembly);
 
                 Assemblies.Add(assemblyDef.Name.Name, Tuple.Create(assembly, assemblyDef));
             }
 
+
             ImportDefaultSettings(Module);
             ImportAssemblySettings(Module.Assembly, true);
+            SetAssemblyWeave(Module.Assembly, Assembly);
 
             Assemblies.Add(Module.Assembly.Name.Name, Tuple.Create(Assembly, Module.Assembly));
+        }
+
+        private SR.Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            SR.AssemblyName assemblyName = new SR.AssemblyName(args.Name);
+
+            if (Assemblies.ContainsKey(assemblyName.Name))
+                return Assemblies[assemblyName.Name].Item1;
+            return null;
         }
 
         /// <summary>
@@ -216,17 +233,17 @@ namespace Insider
         /// and <see cref="Weave.CurrentAssemblyDef"/> properties of a
         /// given assembly.
         /// </summary>
-        //private void SetAssemblyWeave(AssemblyDefinition assemblyDef, SR.Assembly assembly)
-        //{
-        //    Type weaveType = assembly.GetType(nameof(Weave));
+        private void SetAssemblyWeave(AssemblyDefinition assemblyDef, SR.Assembly assembly)
+        {
+            Type weaveType = assembly.GetType(typeof(Weave).FullName);
 
-        //    if (weaveType != null)
-        //    {
-        //        weaveType.GetProperty(nameof(Weave.CurrentAssembly)).SetValue(null, Assembly);
-        //        weaveType.GetProperty(nameof(Weave.CurrentAssemblyDef)).SetValue(null, Module.Assembly);
-        //        weaveType.GetField(nameof(Weave.Assemblies)).SetValue(null, Assemblies);
-        //    }
-        //}
+            if (weaveType != null)
+            {
+                weaveType.GetProperty(nameof(Weave.CurrentAssembly)).SetValue(null, Assembly);
+                weaveType.GetProperty(nameof(Weave.CurrentAssemblyDef)).SetValue(null, Module.Assembly);
+                weaveType.GetField(nameof(Weave.Assemblies), SR.BindingFlags.Static | SR.BindingFlags.NonPublic).SetValue(null, Assemblies);
+            }
+        }
 
         /// <summary>
         /// Dispose all loaded modules.

@@ -103,6 +103,9 @@ namespace Insider
         /// </summary>
         public static object GetValue(this CustomAttributeArgument arg)
         {
+            if (arg.Value is CustomAttributeArgument[])
+                return (arg.Value as CustomAttributeArgument[]).Select(GetValue).ToArray();
+
             object value = arg.Value;
             while (value is CustomAttributeArgument)
                 value = ((CustomAttributeArgument)value).Value;

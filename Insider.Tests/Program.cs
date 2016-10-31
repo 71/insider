@@ -1,8 +1,8 @@
-﻿using System;
-using Shouldly;
+﻿using Shouldly;
 using Insider;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using System;
 
 [assembly: Setting("Hello", "World")]
 [assembly: Insider(CleanUp = false)]
@@ -32,12 +32,24 @@ namespace Insider.Tests
 
     class Program
     {
-        static void Main(string[] args)
-        {
+        static extern void MakeTests();
 
+        static int Main(string[] args)
+        {
+            try
+            {
+                MakeTests();
+                Console.WriteLine("All tests passed successfully.");
+                return 0;
+            }
+            catch (ShouldAssertException e)
+            {
+                Console.Error.WriteLine(e.Message);
+                return 1;
+            }
         }
 
-        [Test("The insider will all 1's to 2's")]
+        [Test("The insider will convert all 1's to 2's")]
         [OpCodeReplacer(Code.Ldc_I4_1, Code.Ldc_I4_2)]
         static void ChangeInt()
         {

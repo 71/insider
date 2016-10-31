@@ -9,6 +9,7 @@
     <Import_RootNamespace>Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)MessageLoggedEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SettingsAttributes.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)LogDelegate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WeaverAttributes.cs" />

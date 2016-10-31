@@ -26,9 +26,8 @@ namespace Insider
                 AppDomain domain = AppDomain.CreateDomain("Insider's Weaving domain", null, domainSetup);
 
                 Weaver weaver = RemotelyCreate<Weaver>(domain, filepath, targetpath, referencedFiles);
-                domain.SetupInformation.ApplicationBase = filepath;
 
-                //weaver.ass
+                domain.SetupInformation.ApplicationBase = filepath;
 
                 return weaver;
             }

@@ -23,13 +23,13 @@ namespace Insider
 
             using (Weaver weaver = Weaver.Create(args[0], args[1], args[2].Split(';')))
             {
-                //weaver.MessageLogged += MessageLogged;
+                weaver.MessageLogged += MessageLogged;
 
                 try
                 {
                     weaver.Process();
                 }
-                catch (Exception e) { EncounteredError = true; }
+                catch (Exception) { EncounteredError = true; }
             }
 
             return EncounteredError ? 1 : 0;

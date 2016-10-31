@@ -51,6 +51,13 @@ namespace Insider
         #endregion
 
         /// <summary>
+        /// Find the first parameter-less method whose <see cref="MethodDefinition.DeclaringType"/> is
+        /// <paramref name="type"/>, and <see cref="MethodDefinition.Name"/> is <paramref name="name"/>.
+        /// </summary>
+        public static MethodDefinition FindMethod(this TypeDefinition type, string name)
+            => type.Methods.FirstOrDefault(x => x.Name == name && x.Parameters.Count == 0);
+
+        /// <summary>
         /// Find the first method whose <see cref="MethodDefinition.DeclaringType"/> is
         /// <paramref name="type"/>, <see cref="MethodDefinition.Name"/> is <paramref name="name"/>,
         /// and <see cref="MethodReference.Parameters"/> is equivalent to <paramref name="paramTypes"/>.
