@@ -13,6 +13,8 @@ namespace Insider
     [Serializable]
     public sealed partial class Weaver : MarshalByRefObject, IDisposable
     {
+        public const string ASSEMBLY_NAME = "Insider";
+
         /// <summary>
         /// Module being woven.
         /// </summary>
@@ -56,7 +58,8 @@ namespace Insider
         /// </summary>
         private Delegate LogMessageDelegate;
 
-        private readonly string[] ReferencedAssemblies;
+        public bool ShouldCleanUp => GetSetting($"{ASSEMBLY_NAME}.CleanUp", true);
+        public bool ShouldDebug => GetSetting($"{ASSEMBLY_NAME}.Debug", false);
 
         /// <summary>
         /// Initialize a new <see cref="Weaver"/>, given the path to the
@@ -67,24 +70,15 @@ namespace Insider
         public Weaver(string filepath, string targetpath, params string[] referencedFiles)
         {
             filepath = Path.GetFullPath(filepath);
-            targetpath = Path.GetFullPath(targetpath);
-            // Since it is not possible to both unload an Assembly
-            // and load its type, it has to be copied before being read.
-            string assemblyPath = filepath + ".weaving";
-            File.Copy(filepath, assemblyPath, true);
-
-            AppDomain.CurrentDomain.AssemblyResolve += DomainResolveAssembly;
-            AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += CurrentDomain_ReflectionOnlyAssemblyResolve;
-
-            TargetPath = targetpath;
+            TargetPath = Path.GetFullPath(targetpath);
 
             // Resolve assembly, module, and initialize settings
+            Assembly = ImportAssembly(filepath);
             Module = ModuleDefinition.ReadModule(filepath, new ReaderParameters
             {
                 InMemory = true,
                 AssemblyResolver = new AssemblyResolver(this)
             });
-            Assembly = ImportAssembly(filepath);
 
             Assemblies = new Dictionary<string, Tuple<SR.Assembly, AssemblyDefinition>>();
             Settings = new Dictionary<string, object>();
@@ -94,18 +88,13 @@ namespace Insider
             Weave.CurrentAssemblyDef = Module.Assembly;
             Weave.Assemblies = Assemblies;
 
-            // Import default settings
+            // Import insider settings
+            ImportInsiderSettings(Module.Assembly);
+
             // Retrieve references
+            // Import default settings
             foreach (string referencedFile in referencedFiles)
             {
-                // After hours of debugging, I know why MethodDefinition can no longer
-                // be cast from one assembly to the other!!
-                // Looks like LoadFrom() "breaks" the already loaded types.
-                // <3 http://stackoverflow.com/a/8059052/5117446 <3
-
-                //if (referencedFile.EndsWith("Mono.Cecil.dll"))
-                //    continue;
-                
                 var assembly = ImportAssembly(referencedFile);
                 var assemblyDef = AssemblyDefinition.ReadAssembly(referencedFile);
 
@@ -116,37 +105,9 @@ namespace Insider
             }
 
             ImportDefaultSettings(Module);
-            ImportAssemblySettings(Module.Assembly);
+            ImportAssemblySettings(Module.Assembly, true);
 
             Assemblies.Add(Module.Assembly.Name.Name, Tuple.Create(Assembly, Module.Assembly));
-        }
-
-        private SR.Assembly CurrentDomain_ReflectionOnlyAssemblyResolve(object sender, ResolveEventArgs args)
-        {
-            throw new NotImplementedException();
-        }
-
-        private SR.Assembly DomainResolveAssembly(object sender, ResolveEventArgs args)
-        {
-            SR.AssemblyName assemblyName = new SR.AssemblyName(args.Name);
-            string name = assemblyName.Name;
-
-            switch (name)
-            {
-                case "Mono.Cecil":
-                    return typeof(ModuleDefinition).Assembly;
-                case "Mono.Cecil.Rocks":
-                    return typeof(Mono.Cecil.Rocks.ILParser).Assembly;
-                case "Mono.Cecil.Pdb":
-                    return typeof(Mono.Cecil.Pdb.PdbReader).Assembly;
-                case "Mono.Cecil.Mdb":
-                    return typeof(Mono.Cecil.Mdb.MdbReader).Assembly;
-            }
-
-            if (Assemblies.ContainsKey(name))
-                return Assemblies[name].Item1;
-
-            return null;
         }
 
         /// <summary>
@@ -156,6 +117,7 @@ namespace Insider
         private SR.Assembly ImportAssembly(string assemblyPath)
         {
             return SR.Assembly.LoadFrom(assemblyPath);
+
             //byte[] assemblyBytes = File.ReadAllBytes(assemblyPath);
             //string pdbPath, mdbPath;
 
@@ -171,9 +133,10 @@ namespace Insider
         /// Scan an <see cref="AssemblyDefinition"/>'s custom attributes
         /// for a <see cref="InsiderSettingAttribute"/>.
         /// </summary>
-        private void ImportAssemblySettings(AssemblyDefinition assembly)
+        private void ImportAssemblySettings(AssemblyDefinition assembly, bool removeAttr = false)
         {
-            bool cleanUp = GetSetting("Insider.CleanUp", true);
+            bool cleanUp = ShouldCleanUp;
+
             for (int i = 0; i < assembly.CustomAttributes.Count; i++)
             {
                 CustomAttribute attr = assembly.CustomAttributes[i];
@@ -184,19 +147,38 @@ namespace Insider
 
                 if (typeDef.Is(typeof(SettingAttribute)))
                 {
-                    Settings.Add((string)attr.ConstructorArguments[0].GetValue(), attr.ConstructorArguments[1].GetValue());
+                    Settings[(string)attr.ConstructorArguments[0].GetValue()] = attr.ConstructorArguments[1].GetValue();
 
-                    if (cleanUp)
+                    if (removeAttr && cleanUp)
                         assembly.CustomAttributes.RemoveAt(i--);
                 }
                 else if (Extends<InsiderSettingAttribute>(attr.AttributeType.AsTypeDefinition()))
                 {
                     foreach (var field in attr.Fields)
-                        Settings.Add(typeDef.Namespace + '.' + field.Name, field.Argument.Value);
+                        Settings[typeDef.Namespace + '.' + field.Name] = field.Argument.GetValue();
+                    foreach (var prop in attr.Properties)
+                        Settings[typeDef.Namespace + '.' + prop.Name] = prop.Argument.GetValue();
 
-                    if (cleanUp)
+                    if (removeAttr && cleanUp)
                         assembly.CustomAttributes.RemoveAt(i--);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Import settings related to Insider.
+        /// </summary>
+        private void ImportInsiderSettings(AssemblyDefinition assembly)
+        {
+            CustomAttribute attr = assembly.GetAttribute<InsiderAttribute>();
+
+            if (attr != null)
+            {
+                foreach (var prop in attr.Properties)
+                    Settings[$"{ASSEMBLY_NAME}.{prop.Name}"] = prop.Argument.GetValue();
+
+                if (ShouldCleanUp)
+                    assembly.CustomAttributes.Remove(attr);
             }
         }
 
@@ -206,6 +188,8 @@ namespace Insider
         /// </summary>
         private void ImportDefaultSettings(ModuleDefinition module)
         {
+            bool cleanUp = ShouldCleanUp;
+
             foreach (TypeDefinition type in module.Types)
             {
                 if (Extends<InsiderSettingAttribute>(type))
@@ -216,11 +200,12 @@ namespace Insider
                         if (attr == null)
                             continue;
 
-                        object value = attr.ConstructorArguments[0].Value;
-                        while (value is CustomAttributeArgument)
-                            value = ((CustomAttributeArgument)value).Value;
+                        string name = type.Namespace + '.' + member.Name;
+                        if (!Settings.ContainsKey(name))
+                            Settings[name] = attr.ConstructorArguments[0].GetValue();
 
-                        Settings.Add(type.Namespace + '.' + member.Name, value);
+                        if (cleanUp)
+                            member.CustomAttributes.Remove(attr);
                     }
                 }
             }
@@ -231,17 +216,17 @@ namespace Insider
         /// and <see cref="Weave.CurrentAssemblyDef"/> properties of a
         /// given assembly.
         /// </summary>
-        private void SetAssemblyWeave(AssemblyDefinition assemblyDef, SR.Assembly assembly)
-        {
-            Type weaveType = assembly.GetType(nameof(Weave));
+        //private void SetAssemblyWeave(AssemblyDefinition assemblyDef, SR.Assembly assembly)
+        //{
+        //    Type weaveType = assembly.GetType(nameof(Weave));
 
-            if (weaveType != null)
-            {
-                weaveType.GetProperty(nameof(Weave.CurrentAssembly)).SetValue(null, Assembly);
-                weaveType.GetProperty(nameof(Weave.CurrentAssemblyDef)).SetValue(null, Module.Assembly);
-                weaveType.GetField(nameof(Weave.Assemblies)).SetValue(null, Assemblies);
-            }
-        }
+        //    if (weaveType != null)
+        //    {
+        //        weaveType.GetProperty(nameof(Weave.CurrentAssembly)).SetValue(null, Assembly);
+        //        weaveType.GetProperty(nameof(Weave.CurrentAssemblyDef)).SetValue(null, Module.Assembly);
+        //        weaveType.GetField(nameof(Weave.Assemblies)).SetValue(null, Assemblies);
+        //    }
+        //}
 
         /// <summary>
         /// Dispose all loaded modules.

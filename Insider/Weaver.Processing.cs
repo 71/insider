@@ -29,7 +29,7 @@ namespace Insider
         /// </summary>
         private void ProcessInternal()
         {
-            bool cleanUp = GetSetting("Insider.CleanUp", true);
+            bool cleanUp = ShouldCleanUp;
 
             // Process assembly
             for (int i = 0; i < Module.Assembly.CustomAttributes.Count; i++)
@@ -98,8 +98,14 @@ namespace Insider
                 for (int i = 0; i < Module.AssemblyReferences.Count; i++)
                 {
                     AssemblyNameReference assembly = Module.AssemblyReferences[i];
-                    if (assembly.Name.StartsWith("Insider") || assembly.Name.StartsWith("Mono.Cecil"))
+                    if (assembly.Name.StartsWith(ASSEMBLY_NAME) || assembly.Name.StartsWith("Mono.Cecil"))
                         Module.AssemblyReferences.RemoveAt(i--);
+                    else if (Assemblies.ContainsKey(assembly.Name))
+                    {
+                        AssemblyDefinition def = Assemblies[assembly.Name].Item2;
+                        if (def.MainModule.AssemblyReferences.Any(x => x.Name.StartsWith(ASSEMBLY_NAME)))
+                            Module.AssemblyReferences.RemoveAt(i--);
+                    }
                 }
             }
         }
@@ -137,12 +143,12 @@ namespace Insider
             try
             {
                 // TODO: Weavers -> Interfaces, to allow a single attribute to be applied on different declarations.
-                if ((bool)Settings["Insider." + nameof(InsiderAttribute.Debug)])
+                if ((bool)Settings[$"{ASSEMBLY_NAME}.{nameof(InsiderAttribute.Debug)}"])
                     System.Diagnostics.Debugger.Launch();
 
                 LogMessage(weaver, $"Processing {(defs[0] as IMemberDefinition).FullName}...", MessageImportance.Debug);
 
-                R.MethodInfo method = attrType.GetMethod("Apply", defs.Select(x => x.GetType()).ToArray());
+                R.MethodInfo method = attrType.GetMethod(nameof(IAssemblyWeaver.Apply), defs.Select(x => x.GetType()).ToArray());
                 method.Invoke(weaver, defs);
             }
             catch (Exception e)
@@ -151,7 +157,7 @@ namespace Insider
             }
 
             // Clear attribute
-            if (GetSetting("Insider.CleanUp", true))
+            if (ShouldCleanUp)
             {
                 foreach (IMemberDefinition def in defs.OfType<IMemberDefinition>())
                     def.CustomAttributes.Remove(attr);

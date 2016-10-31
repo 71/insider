@@ -11,8 +11,6 @@ namespace Insider.Tests
     {
         public void Apply(MethodDefinition method)
         {
-            Log($"Modifying {method.FullName}", MessageImportance.Info);
-
             for (int i = 0; i < method.Body.Instructions.Count; i++)
             {
                 var instr = method.Body.Instructions[i];

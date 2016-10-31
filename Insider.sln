@@ -20,6 +20,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		up.bat = up.bat
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{A4EDC9C6-B43B-4BF3-A388-5ECCCF9AC9F9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Insider.Tests.Library", "Insider.Tests.Library\Insider.Tests.Library.csproj", "{D047BA5B-AB9A-43B7-BCB9-BFD4D76AC801}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Shared\Shared.projitems*{1f0dd5ee-de10-41a6-8e66-16819077f898}*SharedItemsImports = 4
@@ -43,8 +47,16 @@ Global
 		{FBBF181D-4266-42CB-9A43-048A93517749}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FBBF181D-4266-42CB-9A43-048A93517749}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FBBF181D-4266-42CB-9A43-048A93517749}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D047BA5B-AB9A-43B7-BCB9-BFD4D76AC801}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D047BA5B-AB9A-43B7-BCB9-BFD4D76AC801}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D047BA5B-AB9A-43B7-BCB9-BFD4D76AC801}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D047BA5B-AB9A-43B7-BCB9-BFD4D76AC801}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FBBF181D-4266-42CB-9A43-048A93517749} = {A4EDC9C6-B43B-4BF3-A388-5ECCCF9AC9F9}
+		{D047BA5B-AB9A-43B7-BCB9-BFD4D76AC801} = {A4EDC9C6-B43B-4BF3-A388-5ECCCF9AC9F9}
 	EndGlobalSection
 EndGlobal
