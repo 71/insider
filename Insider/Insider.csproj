@@ -66,10 +66,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssemblyResolver.cs" />
     <Compile Include="MessageLoggedEventArgs.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Weaver.cs" />
+    <Compile Include="Weaver.Outsider.cs" />
     <Compile Include="WeaveTask.cs" />
   </ItemGroup>
   <ItemGroup>

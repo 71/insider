@@ -28,12 +28,6 @@ namespace Insider
         public static AssemblyDefinition CurrentAssemblyDef { get; internal set; }
 
 
-        public static void Debug()
-        {
-            System.Diagnostics.Debugger.Launch();
-        }
-
-
         /// <summary>
         /// Attempt to convert the given <see cref="TypeReference"/> to
         /// a <see cref="Type"/>.
@@ -41,8 +35,10 @@ namespace Insider
         public static Type AsType(this TypeReference typeRef)
         {
             Type t = CurrentAssembly.GetType(typeRef.Namespace + "." + typeRef.Name);
+            if (t == null && Assemblies.ContainsKey(typeRef.Module.Assembly.Name.Name))
+                t = Assemblies[typeRef.Module.Assembly.Name.Name].Item1.GetType(typeRef.Namespace + '.' + typeRef.Name);
             if (t == null && Assemblies.ContainsKey(typeRef.Scope.Name))
-                t = Assemblies[typeRef.Scope.Name].Item1.GetType(typeRef.Namespace + "." + typeRef.Name);
+                t = Assemblies[typeRef.Scope.Name].Item1.GetType(typeRef.Namespace + '.' + typeRef.Name);
             if (t == null)
                 return null;
 
@@ -98,6 +94,19 @@ namespace Insider
         public static TypeDefinition FindType(this ModuleDefinition module, Type type)
         {
             return module.Types.First(x => x.Is(type, false));
+        }
+
+
+        /// <summary>
+        /// Returns a <see cref="CustomAttributeArgument"/>'s <see cref="object"/>
+        /// value.
+        /// </summary>
+        public static object GetValue(this CustomAttributeArgument arg)
+        {
+            object value = arg.Value;
+            while (value is CustomAttributeArgument)
+                value = ((CustomAttributeArgument)value).Value;
+            return value;
         }
     }
 }

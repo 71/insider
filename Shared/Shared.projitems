@@ -11,7 +11,8 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)SettingsAttributes.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)LogDelegate.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)WeaversAttributes.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WeaverAttributes.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Weavers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Weave\Compare.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Weave\Convert.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Weave\Main.cs" />

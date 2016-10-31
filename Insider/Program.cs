@@ -21,9 +21,9 @@ namespace Insider
                 return 1;
             }
 
-            using (Weaver weaver = new Weaver(args[0], args[1], args[2].Split(';')))
+            using (Weaver weaver = Weaver.Create(args[0], args[1], args[2].Split(';')))
             {
-                weaver.MessageLogged += MessageLogged;
+                //weaver.MessageLogged += MessageLogged;
 
                 try
                 {

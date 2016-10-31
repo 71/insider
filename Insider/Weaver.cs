@@ -11,7 +11,7 @@ namespace Insider
     /// Class used to weave modules.
     /// </summary>
     [Serializable]
-    public sealed partial class Weaver : IDisposable
+    public sealed partial class Weaver : MarshalByRefObject, IDisposable
     {
         /// <summary>
         /// Module being woven.
@@ -56,11 +56,6 @@ namespace Insider
         /// </summary>
         private Delegate LogMessageDelegate;
 
-        private readonly AppDomain ProcessDomain;
-        private readonly AppDomainSetup ProcessDomainSetup;
-
-        private readonly DomainProxy Proxy;
-
         private readonly string[] ReferencedAssemblies;
 
         /// <summary>
@@ -73,30 +68,22 @@ namespace Insider
         {
             filepath = Path.GetFullPath(filepath);
             targetpath = Path.GetFullPath(targetpath);
-
-            ReferencedAssemblies = referencedFiles;
-
-            ProcessDomainSetup = new AppDomainSetup();
-
-            ProcessDomain = AppDomain.CreateDomain("Insider's Weaving domain", AppDomain.CurrentDomain.Evidence, ProcessDomainSetup);
-            ProcessDomain.AssemblyResolve += DomainResolveAssembly;
-
-            Proxy = (DomainProxy)ProcessDomain.CreateInstanceFromAndUnwrap(
-                typeof(DomainProxy).Assembly.Location,
-                typeof(DomainProxy).FullName);
-
-            ProcessDomainSetup.ApplicationBase = Path.GetDirectoryName(filepath);
-
-
             // Since it is not possible to both unload an Assembly
             // and load its type, it has to be copied before being read.
             string assemblyPath = filepath + ".weaving";
             File.Copy(filepath, assemblyPath, true);
 
+            AppDomain.CurrentDomain.AssemblyResolve += DomainResolveAssembly;
+            AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += CurrentDomain_ReflectionOnlyAssemblyResolve;
+
             TargetPath = targetpath;
 
             // Resolve assembly, module, and initialize settings
-            Module = ModuleDefinition.ReadModule(filepath, new ReaderParameters { InMemory = true });
+            Module = ModuleDefinition.ReadModule(filepath, new ReaderParameters
+            {
+                InMemory = true,
+                AssemblyResolver = new AssemblyResolver(this)
+            });
             Assembly = ImportAssembly(filepath);
 
             Assemblies = new Dictionary<string, Tuple<SR.Assembly, AssemblyDefinition>>();
@@ -124,11 +111,19 @@ namespace Insider
 
                 ImportDefaultSettings(assemblyDef.MainModule);
                 ImportAssemblySettings(assemblyDef);
+
                 Assemblies.Add(assemblyDef.Name.Name, Tuple.Create(assembly, assemblyDef));
             }
 
             ImportDefaultSettings(Module);
             ImportAssemblySettings(Module.Assembly);
+
+            Assemblies.Add(Module.Assembly.Name.Name, Tuple.Create(Assembly, Module.Assembly));
+        }
+
+        private SR.Assembly CurrentDomain_ReflectionOnlyAssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            throw new NotImplementedException();
         }
 
         private SR.Assembly DomainResolveAssembly(object sender, ResolveEventArgs args)
@@ -148,13 +143,8 @@ namespace Insider
                     return typeof(Mono.Cecil.Mdb.MdbReader).Assembly;
             }
 
-            for (int i = 0; i < ReferencedAssemblies.Length; i++)
-            {
-                if (ReferencedAssemblies[i].Contains(name + ".dll"))
-                {
-                    return ImportAssembly(ReferencedAssemblies[i]);
-                }
-            }
+            if (Assemblies.ContainsKey(name))
+                return Assemblies[name].Item1;
 
             return null;
         }
@@ -165,7 +155,7 @@ namespace Insider
         /// <param name="assemblyPath">The path to the file in which the Assembly is located</param>
         private SR.Assembly ImportAssembly(string assemblyPath)
         {
-            return Proxy.GetAssembly(assemblyPath);
+            return SR.Assembly.LoadFrom(assemblyPath);
             //byte[] assemblyBytes = File.ReadAllBytes(assemblyPath);
             //string pdbPath, mdbPath;
 
@@ -183,29 +173,29 @@ namespace Insider
         /// </summary>
         private void ImportAssemblySettings(AssemblyDefinition assembly)
         {
+            bool cleanUp = GetSetting("Insider.CleanUp", true);
             for (int i = 0; i < assembly.CustomAttributes.Count; i++)
             {
                 CustomAttribute attr = assembly.CustomAttributes[i];
-                TypeDefinition typeDef = GetTypeDefinition(attr.AttributeType);
+                TypeDefinition typeDef = attr.AttributeType.AsTypeDefinition();
 
                 if (typeDef == null)
                     continue;
 
                 if (typeDef.Is(typeof(SettingAttribute)))
                 {
-                    // For some reason some arguments are arguments themselves...
-                    object value = attr.ConstructorArguments[1].Value;
-                    while (value is CustomAttributeArgument)
-                        value = ((CustomAttributeArgument)value).Value;
+                    Settings.Add((string)attr.ConstructorArguments[0].GetValue(), attr.ConstructorArguments[1].GetValue());
 
-                    Settings.Add((string)attr.ConstructorArguments[0].Value, value);
-                    assembly.CustomAttributes.RemoveAt(i);
+                    if (cleanUp)
+                        assembly.CustomAttributes.RemoveAt(i--);
                 }
-                else if (Extends<InsiderSettingAttribute>(GetTypeDefinition(attr.AttributeType)))
+                else if (Extends<InsiderSettingAttribute>(attr.AttributeType.AsTypeDefinition()))
                 {
                     foreach (var field in attr.Fields)
                         Settings.Add(typeDef.Namespace + '.' + field.Name, field.Argument.Value);
-                    assembly.CustomAttributes.RemoveAt(i);
+
+                    if (cleanUp)
+                        assembly.CustomAttributes.RemoveAt(i--);
                 }
             }
         }

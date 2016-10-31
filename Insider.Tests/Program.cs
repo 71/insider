@@ -5,12 +5,13 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 [assembly: Setting("Hello", "World")]
+[assembly: Insider(CleanUp = false)]
 
 namespace Insider.Tests
 {
-    class OneToTwoAttribute : MethodWeaverAttribute
+    class OneToTwoAttribute : WeaverAttribute, IMethodWeaver
     {
-        public override void Apply(MethodDefinition method)
+        public void Apply(MethodDefinition method)
         {
             foreach (var instr in method.Body.Instructions)
             {
@@ -22,7 +23,7 @@ namespace Insider.Tests
         }
     }
 
-    class OpCodeReplacerAttribute : MethodWeaverAttribute
+    class OpCodeReplacerAttribute : WeaverAttribute, IMethodWeaver
     {
         public OpCode From { get; protected set; }
         public OpCode To { get; protected set; }
@@ -33,7 +34,7 @@ namespace Insider.Tests
             To = (OpCode)typeof(OpCodes).GetField(to.ToString()).GetValue(null);
         }
 
-        public override void Apply(MethodDefinition method)
+        public void Apply(MethodDefinition method)
         {
             foreach (var instr in method.Body.Instructions)
             {

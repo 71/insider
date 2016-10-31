@@ -15,13 +15,7 @@ namespace Insider
         {
             try
             {
-                ProcessInternal();
-
-                // For some reason, an error is thrown when I try to write
-                // the module to [Module.FileName], stating that a process
-                // is using it. However, I am able to remove it, which proves
-                // the error wrong. Whatever works I guess.
-                
+                ProcessInternal();                
                 Module.Write(TargetPath);
             }
             catch (Exception e)
@@ -35,9 +29,12 @@ namespace Insider
         /// </summary>
         private void ProcessInternal()
         {
+            bool cleanUp = GetSetting("Insider.CleanUp", true);
+
             // Process assembly
-            foreach (CustomAttribute attr in Module.Assembly.CustomAttributes)
-                ProcessAny<AssemblyWeaverAttribute>(attr, Module.Assembly);
+            for (int i = 0; i < Module.Assembly.CustomAttributes.Count; i++)
+                if (ProcessAny<IAssemblyWeaver>(Module.Assembly.CustomAttributes[i], Module.Assembly) && cleanUp)
+                    i--;
 
             // Process types
             foreach (TypeDefinition typeDef in Module.Types)
@@ -45,22 +42,25 @@ namespace Insider
                 // Process fields
                 foreach (FieldDefinition fieldDef in typeDef.Fields)
                 {
-                    foreach (CustomAttribute attr in fieldDef.CustomAttributes)
-                        ProcessAny<FieldWeaverAttribute>(attr, fieldDef);
+                    for (int i = 0; i < fieldDef.CustomAttributes.Count; i++)
+                        if (ProcessAny<IFieldWeaver>(fieldDef.CustomAttributes[i], fieldDef) && cleanUp)
+                            i--;
                 }
 
                 // Process properties
                 foreach (PropertyDefinition propDef in typeDef.Properties)
                 {
-                    foreach (CustomAttribute attr in propDef.CustomAttributes)
-                        ProcessAny<PropertyWeaverAttribute>(attr, propDef);
+                    for (int i = 0; i < propDef.CustomAttributes.Count; i++)
+                        if (ProcessAny<IPropertyWeaver>(propDef.CustomAttributes[i], propDef) && cleanUp)
+                            i--;
                 }
 
                 // Process events
                 foreach (EventDefinition eventDef in typeDef.Events)
                 {
-                    foreach (CustomAttribute attr in eventDef.CustomAttributes)
-                        ProcessAny<EventWeaverAttribute>(attr, eventDef);
+                    for (int i = 0; i < eventDef.CustomAttributes.Count; i++)
+                        if (ProcessAny<IEventWeaver>(eventDef.CustomAttributes[i], eventDef) && cleanUp)
+                            i--;
                 }
 
                 // Process methods
@@ -69,19 +69,23 @@ namespace Insider
                     // Process parameters
                     foreach (ParameterDefinition paramDef in methodDef.Parameters)
                     {
-                        foreach (CustomAttribute attr in paramDef.CustomAttributes)
-                            ProcessAny<ParameterWeaverAttribute>(attr, paramDef, methodDef);
+                        for (int i = 0; i < paramDef.CustomAttributes.Count; i++)
+                            if (ProcessAny<IParameterWeaver>(paramDef.CustomAttributes[i], paramDef, methodDef) && cleanUp)
+                                i--;
                     }
 
                     for (int i = 0; i < methodDef.CustomAttributes.Count; i++)
-                        ProcessAny<MethodWeaverAttribute>(methodDef.CustomAttributes[i], methodDef);
+                        if (ProcessAny<IMethodWeaver>(methodDef.CustomAttributes[i], methodDef) && cleanUp)
+                            i--;
                 }
 
-                foreach (CustomAttribute attr in typeDef.CustomAttributes)
-                    ProcessAny<TypeWeaverAttribute>(attr, typeDef);
+                for (int i = 0; i < typeDef.CustomAttributes.Count; i++)
+                    if (ProcessAny<ITypeWeaver>(typeDef.CustomAttributes[i], typeDef) && cleanUp)
+                        i--;
             }
 
-            if (Settings.ContainsKey("Insider.CleanUp") && (bool)Settings["Insider.CleanUp"])
+
+            if (cleanUp)
             {
                 // Remove attribute definition
                 for (int i = 0; i < Module.Types.Count; i++)
@@ -103,20 +107,24 @@ namespace Insider
         /// <summary>
         /// Process a single definition.
         /// </summary>
-        private void ProcessAny<TWeaver>(CustomAttribute attr, params object[] defs) where TWeaver : WeaverAttribute
+        /// <returns><code>true</code> if the attribute was a weaver ; <code>false</code> otherwise.</returns>
+        private bool ProcessAny<TWeaver>(CustomAttribute attr, params object[] defs) where TWeaver : IWeaver
         {
+            TypeDefinition attrTypeDef = attr.AttributeType.AsTypeDefinition();
+
             // Make sure it's a weaver
-            if (!Extends<TWeaver>(GetTypeDefinition(attr.AttributeType)))
-                return;
+            if (!Extends<WeaverAttribute>(attrTypeDef))
+                return false;
+            if (!Extends<TWeaver>(attrTypeDef))
+                return false;
 
             // Create the attribute
             Type attrType = attr.AttributeType.AsType();
             R.PropertyInfo logProp = attrType.GetProperty(nameof(WeaverAttribute.LogInternal), R.BindingFlags.NonPublic | R.BindingFlags.Instance);
             R.PropertyInfo setProp = attrType.GetProperty(nameof(WeaverAttribute.Settings), R.BindingFlags.NonPublic | R.BindingFlags.Instance);
-            //object weaver = Activator.CreateInstance(attrType, attr.ConstructorArguments.Select(x => x.Value).ToArray());
-            object weaver = attrType
-                .GetConstructor(attr.ConstructorArguments.Select(x => x.Type.AsType()).ToArray())
-                .Invoke(attr.ConstructorArguments.Select(x => x.Value).ToArray());
+            
+            R.ConstructorInfo weaverCtor = attrType.GetConstructor(attr.ConstructorArguments.Select(x =>  x.Type.AsType()).ToArray());
+            object weaver = weaverCtor.Invoke(attr.ConstructorArguments.Select(Weave.GetValue).ToArray());
 
             // Add ability to log messages, and set settings
             if (LogMessageDelegate == null)
@@ -128,6 +136,7 @@ namespace Insider
             // Invoke Weaver.Apply();
             try
             {
+                // TODO: Weavers -> Interfaces, to allow a single attribute to be applied on different declarations.
                 if ((bool)Settings["Insider." + nameof(InsiderAttribute.Debug)])
                     System.Diagnostics.Debugger.Launch();
 
@@ -142,8 +151,13 @@ namespace Insider
             }
 
             // Clear attribute
-            foreach (IMemberDefinition def in defs.OfType<IMemberDefinition>())
-                def.CustomAttributes.Remove(attr);
+            if (GetSetting("Insider.CleanUp", true))
+            {
+                foreach (IMemberDefinition def in defs.OfType<IMemberDefinition>())
+                    def.CustomAttributes.Remove(attr);
+            }
+
+            return true;
         }
     }
 }

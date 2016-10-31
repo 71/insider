@@ -1,11 +1,18 @@
 ﻿using System;
+using System.Runtime.Serialization;
 
 namespace Insider
 {
     /// <summary>
     /// Exception encountered whilst weaving an assembly.
     /// </summary>
+#if !PCL
+    [Serializable]
+#endif
     public sealed class WeavingException : Exception
+#if !PCL
+        , ISerializable
+#endif
     {
         /// <summary>
         /// <see cref="WeaverAttribute"/> that sent the error.
@@ -35,5 +42,22 @@ namespace Insider
             Sender = null;
             IsError = true;
         }
+
+#if !PCL
+        public WeavingException(SerializationInfo info, StreamingContext context)
+            : base(info.GetString("msg"), info.GetValue("inner", typeof(Exception)) as Exception)
+        {
+            IsError = info.GetBoolean("iserror");
+            Sender = info.GetValue("sender", typeof(WeaverAttribute)) as WeaverAttribute;
+        }
+
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("iserror", IsError);
+            info.AddValue("sender", Sender, typeof(WeaverAttribute));
+            info.AddValue("msg", Message);
+            info.AddValue("inner", InnerException, typeof(Exception));
+        }
+#endif
     }
 }

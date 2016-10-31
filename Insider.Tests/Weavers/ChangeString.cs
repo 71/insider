@@ -7,9 +7,9 @@ namespace Insider.Tests
     /// Changes the first constant string to be declared
     /// to "I have been modified."
     /// </summary>
-    public sealed class ChangeStringAttribute : MethodWeaverAttribute
+    public sealed class ChangeStringAttribute : WeaverAttribute, IMethodWeaver
     {
-        public override void Apply(MethodDefinition method)
+        public void Apply(MethodDefinition method)
         {
             Log($"Modifying {method.FullName}", MessageImportance.Info);
 
