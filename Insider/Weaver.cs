@@ -83,7 +83,7 @@ namespace Insider
             Assemblies = new Dictionary<string, Tuple<SR.Assembly, AssemblyDefinition>>();
             Settings = new Dictionary<string, object>();
 
-            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+            AppDomain.CurrentDomain.AssemblyResolve += DomainAssemblyResolve;
 
             SR.Assembly insiderAssembly = SR.Assembly.GetExecutingAssembly();
             Assemblies.Add(ASSEMBLY_NAME, Tuple.Create(insiderAssembly, AssemblyDefinition.ReadAssembly(insiderAssembly.Location)));
@@ -118,7 +118,11 @@ namespace Insider
             Assemblies.Add(Module.Assembly.Name.Name, Tuple.Create(Assembly, Module.Assembly));
         }
 
-        private SR.Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        /// <summary>
+        /// Look through already imported assemblies for
+        /// a match.
+        /// </summary>
+        private SR.Assembly DomainAssemblyResolve(object sender, ResolveEventArgs args)
         {
             SR.AssemblyName assemblyName = new SR.AssemblyName(args.Name);
 
