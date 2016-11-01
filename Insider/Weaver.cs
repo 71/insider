@@ -54,9 +54,20 @@ namespace Insider
         private readonly Dictionary<string, Tuple<SR.Assembly, AssemblyDefinition>> Assemblies;
 
         /// <summary>
+        /// List of all module weavers found in every scanned assembly.
+        /// </summary>
+        private readonly List<IModuleWeaver> ModuleWeavers;
+
+        /// <summary>
         /// <see cref="Delegate"/> that calls <see cref="LogMessage(string, MessageImportance)"/>.
         /// </summary>
         private Delegate LogMessageDelegate;
+
+        /// <summary>
+        /// Whether or not <see cref="ModuleDefinition.ReadSymbols"/> was successful,
+        /// in which case <see cref="MethodDefinition.DebugInformation"/> is available.
+        /// </summary>
+        private readonly bool SymbolsWereRead;
 
         public bool ShouldCleanUp => GetSetting($"{ASSEMBLY_NAME}.CleanUp", true);
         public bool ShouldDebug => GetSetting($"{ASSEMBLY_NAME}.Debug", false);
@@ -64,6 +75,9 @@ namespace Insider
         /// <summary>
         /// Initialize a new <see cref="Weaver"/>, given the path to the
         /// assembly it will weave.
+        /// <para>
+        /// Please do not call directly.
+        /// </para>
         /// </summary>
         /// <param name="filepath">Absolute path of the assembly to weave</param>
         /// <param name="referencedFiles">Absolute paths of the files referenced by the assembly to weave</param>
@@ -73,18 +87,33 @@ namespace Insider
             TargetPath = Path.GetFullPath(targetpath);
 
             // Resolve assembly, module, and initialize settings
-            Assembly = ImportAssembly(filepath);
             Module = ModuleDefinition.ReadModule(filepath, new ReaderParameters
             {
                 InMemory = true,
                 AssemblyResolver = new AssemblyResolver(this)
             });
 
+            try
+            {
+                // Read symbols for easier debugging
+                Module.ReadSymbols();
+                SymbolsWereRead = true;
+            }
+            catch (Exception)
+            {
+                SymbolsWereRead = false;
+            }
+
+            Assembly = ImportAssembly(filepath);
+
             Assemblies = new Dictionary<string, Tuple<SR.Assembly, AssemblyDefinition>>();
             Settings = new Dictionary<string, object>();
 
+            // Take care of assembly resolving errors, thanks to the given references
             AppDomain.CurrentDomain.AssemblyResolve += DomainAssemblyResolve;
 
+            // Resolve the original Insider assembly, otherwise interacting with this class
+            // from another AppDomain will throw.
             SR.Assembly insiderAssembly = SR.Assembly.GetExecutingAssembly();
             Assemblies.Add(ASSEMBLY_NAME, Tuple.Create(insiderAssembly, AssemblyDefinition.ReadAssembly(insiderAssembly.Location)));
 
@@ -102,20 +131,19 @@ namespace Insider
             {
                 var assembly = ImportAssembly(referencedFile);
                 var assemblyDef = AssemblyDefinition.ReadAssembly(referencedFile);
+                
+                Assemblies.Add(assemblyDef.Name.Name, Tuple.Create(assembly, assemblyDef));
 
-                ImportDefaultSettings(assemblyDef.MainModule);
+                ImportDefaultSettings(assemblyDef.MainModule, assembly);
                 ImportAssemblySettings(assemblyDef);
                 SetAssemblyWeave(assemblyDef, assembly);
-
-                Assemblies.Add(assemblyDef.Name.Name, Tuple.Create(assembly, assemblyDef));
             }
 
+            Assemblies.Add(Module.Assembly.Name.Name, Tuple.Create(Assembly, Module.Assembly));
 
-            ImportDefaultSettings(Module);
+            ImportDefaultSettings(Module, Assembly);
             ImportAssemblySettings(Module.Assembly, true);
             SetAssemblyWeave(Module.Assembly, Assembly);
-
-            Assemblies.Add(Module.Assembly.Name.Name, Tuple.Create(Assembly, Module.Assembly));
         }
 
         /// <summary>
@@ -138,16 +166,6 @@ namespace Insider
         private SR.Assembly ImportAssembly(string assemblyPath)
         {
             return SR.Assembly.LoadFrom(assemblyPath);
-
-            //byte[] assemblyBytes = File.ReadAllBytes(assemblyPath);
-            //string pdbPath, mdbPath;
-
-            //if (File.Exists((pdbPath = Path.ChangeExtension(assemblyPath, "pdb"))))
-            //    return SR.Assembly.Load(assemblyBytes, File.ReadAllBytes(pdbPath));
-            //else if (File.Exists((mdbPath = Path.ChangeExtension(assemblyPath, "mdb"))))
-            //    return SR.Assembly.Load(assemblyBytes, File.ReadAllBytes(mdbPath));
-            //else
-            //    return SR.Assembly.Load(assemblyBytes);
         }
         
         /// <summary>
@@ -207,17 +225,17 @@ namespace Insider
         /// Import default settings for every declared attribute that inherits
         /// <see cref="InsiderSettingAttribute"/>.
         /// </summary>
-        private void ImportDefaultSettings(ModuleDefinition module)
+        private void ImportDefaultSettings(ModuleDefinition moduleDef, SR.Assembly assembly)
         {
             bool cleanUp = ShouldCleanUp;
 
-            foreach (TypeDefinition type in module.Types)
+            foreach (TypeDefinition type in moduleDef.Types)
             {
-                if (Extends<InsiderSettingAttribute>(type))
+                if (Extends<InsiderSettingAttribute>(type)) // Import default settings
                 {
                     foreach (IMemberDefinition member in type.Fields.OfType<IMemberDefinition>().Concat(type.Properties))
                     {
-                        CustomAttribute attr = member.GetAttribute<DefaultSettingAttribute>();
+                        CustomAttribute attr = member.GetAttribute<DefaultSettingValueAttribute>();
                         if (attr == null)
                             continue;
 
@@ -228,6 +246,21 @@ namespace Insider
                         if (cleanUp)
                             member.CustomAttributes.Remove(attr);
                     }
+                }
+                else if (Extends<IModuleWeaver>(type)) // Module weaver
+                {
+                    Type moduleWeaverType = assembly.GetType(type.FullName);
+                    if (moduleWeaverType == null)
+                        continue;
+
+                    var ctor = moduleWeaverType.GetConstructor(new Type[0]);
+                    if (ctor == null)
+                        continue;
+
+                    IModuleWeaver weaver = (IModuleWeaver)ctor.Invoke(new object[0]);
+                    ProcessModuleWeaver(moduleWeaverType, weaver, true);
+
+                    ModuleWeavers.Add(weaver);
                 }
             }
         }

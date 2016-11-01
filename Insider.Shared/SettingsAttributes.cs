@@ -35,14 +35,14 @@ namespace Insider
     /// an attribute that inherits <see cref="InsiderSettingAttribute"/>).
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
-    public sealed class DefaultSettingAttribute : Attribute
+    public sealed class DefaultSettingValueAttribute : Attribute
     {
         internal readonly object Value;
 
         /// <summary>
         /// Set a setting's default value to <paramref name="value"/>.
         /// </summary>
-        public DefaultSettingAttribute(object value)
+        public DefaultSettingValueAttribute(object value)
         {
             Value = value;
         }
@@ -65,7 +65,7 @@ namespace Insider
         /// Default: <code>true</code>.
         /// </para>
         /// </summary>
-        [DefaultSetting(true)]
+        [DefaultSettingValue(true)]
         public bool CleanUp { get; set; }
 
         /// <summary>
@@ -75,7 +75,7 @@ namespace Insider
         /// Default: <code>false</code>.
         /// </para> 
         /// </summary>
-        [DefaultSetting(false)]
+        [DefaultSettingValue(false)]
         public bool Debug { get; set; }
     }
 }

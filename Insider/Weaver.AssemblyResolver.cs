@@ -9,8 +9,6 @@ namespace Insider
 {
     public sealed partial class Weaver
     {
-
-
         sealed class AssemblyResolver : IAssemblyResolver
         {
             public readonly Weaver Creator;

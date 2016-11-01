@@ -27,8 +27,8 @@
     <Target Name="InsiderWeaving" AfterTargets="AfterCompile"
             Inputs="@(IntermediateAssembly)" Outputs="$(TargetPath)">
         <Insider.WeaveTask TargetAssembly="@(IntermediateAssembly)"
-                           TargetReferences="@(ReferencePath)"
-                           Configuration="$(ConfigurationName)"/>
+                           TargetPath="$(InsiderTargetPath)"
+                           TargetReferences="@(ReferencePath)" />
     </Target>-->
     
 </Project>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.Serialization;
+using Mono.Cecil.Cil;
 
 namespace Insider
 {
@@ -9,7 +10,7 @@ namespace Insider
 #if !PCL
     [Serializable]
 #endif
-    public sealed class WeavingException : Exception
+    public class WeavingException : Exception
 #if !PCL
         , ISerializable
 #endif
@@ -60,4 +61,29 @@ namespace Insider
         }
 #endif
     }
+
+    /// <summary>
+    /// Exception encountered whilst weaving an assembly,
+    /// precisely in a method called by the Insider.
+    /// </summary>
+//#if !PCL
+//    [Serializable]
+//#endif
+//    public class MethodWeavingException : WeavingException
+//#if !PCL
+//        , ISerializable
+//#endif
+//    {
+//        /// <summary>
+//        /// Debug information of the method that threw the error.
+//        /// </summary>
+//        public MethodDebugInformation DebugInformation { get; private set; }
+
+//        public 
+
+//        public MethodWeavingException() : base()
+//        {
+
+//        }
+//    }
 }

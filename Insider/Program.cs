@@ -29,7 +29,11 @@ namespace Insider
                 {
                     weaver.Process();
                 }
-                catch (Exception) { EncounteredError = true; }
+                catch (Exception e)
+                {
+                    EncounteredError = true;
+                    MessageLogged(null, new MessageLoggedEventArgs(e.Message, MessageImportance.Error, true));
+                }
             }
 
             return EncounteredError ? 1 : 0;

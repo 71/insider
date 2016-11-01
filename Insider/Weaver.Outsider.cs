@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SR = System.Reflection;
 
 namespace Insider
@@ -21,13 +17,13 @@ namespace Insider
                 AppDomainSetup domainSetup = new AppDomainSetup
                 {
                     PrivateBinPath = filepath,
-                    ApplicationBase = typeof(Weaver).Assembly.Location
+                    ApplicationBase = Path.GetDirectoryName(typeof(Weaver).Assembly.Location)
                 };
                 AppDomain domain = AppDomain.CreateDomain("Insider's Weaving domain", null, domainSetup);
 
                 Weaver weaver = RemotelyCreate<Weaver>(domain, filepath, targetpath, referencedFiles);
 
-                domain.SetupInformation.ApplicationBase = filepath;
+                domain.SetupInformation.ApplicationBase = Path.GetDirectoryName(filepath);
 
                 return weaver;
             }

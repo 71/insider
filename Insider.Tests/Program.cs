@@ -4,8 +4,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
 
-[assembly: Setting("Hello", "World")]
-[assembly: Insider(CleanUp = false)]
+[assembly: Setting("Foo", "Bar")]
 
 namespace Insider.Tests
 {
@@ -30,6 +29,19 @@ namespace Insider.Tests
         }
     }
 
+    class EnvironmentTestAttribute : WeaverAttribute, ITypeWeaver
+    {
+        public void Apply(TypeDefinition type)
+        {
+            Settings.ContainsKey("Foo").ShouldBeTrue();
+            Settings["Foo"].ShouldBe("Bar");
+
+            Settings.ContainsKey("Insider.CleanUp").ShouldBeTrue();
+            Settings["Insider.CleanUp"].ShouldBe(true);
+        }
+    }
+
+    [EnvironmentTest]
     class Program
     {
         static extern void MakeTests();

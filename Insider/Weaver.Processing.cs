@@ -84,6 +84,10 @@ namespace Insider
                         i--;
             }
 
+            // Process module
+            foreach (IModuleWeaver weaver in ModuleWeavers)
+                ProcessModuleWeaver(weaver.GetType(), weaver, false);
+
 
             if (cleanUp)
             {
@@ -132,6 +136,12 @@ namespace Insider
             R.ConstructorInfo weaverCtor = attrType.GetConstructor(attr.ConstructorArguments.Select(x =>  x.Type.AsType()).ToArray());
             object weaver = weaverCtor.Invoke(attr.ConstructorArguments.Select(Weave.GetValue).ToArray());
 
+            // Set its field and properties
+            foreach (var field in attr.Fields)
+                attrType.GetField(field.Name).SetValue(weaver, field.Argument.GetValue());
+            foreach (var prop in attr.Properties)
+                attrType.GetProperty(prop.Name).SetValue(weaver, prop.Argument.GetValue());
+
             // Add ability to log messages, and set settings
             if (LogMessageDelegate == null)
                 LogMessageDelegate = Delegate.CreateDelegate(logProp.PropertyType, this, nameof(Weaver.LogMessage));
@@ -142,7 +152,6 @@ namespace Insider
             // Invoke Weaver.Apply();
             try
             {
-                // TODO: Weavers -> Interfaces, to allow a single attribute to be applied on different declarations.
                 if ((bool)Settings[$"{ASSEMBLY_NAME}.{nameof(InsiderAttribute.Debug)}"])
                     System.Diagnostics.Debugger.Launch();
 
@@ -164,6 +173,41 @@ namespace Insider
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Process a module, using a <see cref="IModuleWeaver"/>
+        /// </summary>
+        private void ProcessModuleWeaver(Type weaverType, IModuleWeaver weaver, bool before)
+        {
+            // If we got this far, (weaver is IModuleWeaver && weaver is WeaverAttribute) == true.
+            R.PropertyInfo logProp = weaverType.GetProperty(nameof(WeaverAttribute.LogInternal), R.BindingFlags.NonPublic | R.BindingFlags.Instance);
+            R.PropertyInfo setProp = weaverType.GetProperty(nameof(WeaverAttribute.Settings), R.BindingFlags.NonPublic | R.BindingFlags.Instance);
+
+            if (LogMessageDelegate == null)
+                LogMessageDelegate = Delegate.CreateDelegate(logProp.PropertyType, this, nameof(Weaver.LogMessage));
+
+            logProp.SetValue(weaver, LogMessageDelegate);
+            setProp.SetValue(weaver, Settings);
+
+            // Invoke Weaver.Apply();
+            try
+            {
+                if ((bool)Settings[$"{ASSEMBLY_NAME}.{nameof(InsiderAttribute.Debug)}"])
+                    System.Diagnostics.Debugger.Launch();
+
+                weaver.Apply(Module, before ? ProcessingState.Before : ProcessingState.After);
+            }
+            catch (Exception e)
+            {
+                throw new WeavingException(weaver, e.Message, MessageImportance.Error);
+            }
+
+            // Clean up if this was declared in this assembly
+            if (!before && ShouldCleanUp && weaverType.Assembly == Assembly)
+            {
+                Module.Types.Remove(weaverType.AsTypeDefinition());
+            }
         }
     }
 }

@@ -15,21 +15,23 @@ namespace Insider
         [Required]
         public string TargetPath { get; set; }
 
-        public string Configuration { get; set; }
-
         bool EncounteredError;
 
         public override bool Execute()
         {
             try
             {
-                using (Weaver weaver = new Weaver(TargetAssembly, TargetPath, TargetReferences.Split(';')))
+                using (Weaver weaver = Weaver.Create(TargetAssembly, TargetPath, TargetReferences.Split(';')))
                 {
                     weaver.MessageLogged += MessageLogged;
                     weaver.Process();
                 }
             }
-            catch (Exception) { EncounteredError = true; }
+            catch (Exception e)
+            {
+                EncounteredError = true;
+                MessageLogged(null, new MessageLoggedEventArgs(e.Message, MessageImportance.Error, true));
+            }
             
             return !EncounteredError;
         }

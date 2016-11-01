@@ -688,16 +688,6 @@ namespace Insider
                 
         /// <summary>
         /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Ldc_I4_M1"/>.
-        /// <para>
-        /// Push -1 of type int32 onto the stack as int32 (alias for ldc.i4.m1).
-        /// </para>
-        /// </summary>
-        public static Instruction Ldc_I4_M1()
-            => Instruction.Create(OpCodes.Ldc_I4_M1);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
         /// <see cref="OpCodes.Ldelem_I"/>.
         /// <para>
         /// Load the element with type native int at index onto the top of the stack as a native int.

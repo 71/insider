@@ -27,6 +27,12 @@ namespace Insider
         /// </para>
         /// </summary>
         public bool StoppedWeaving { get; private set; }
+
+        public string File { get; private set; }
+
+        public int Column { get; private set; }
+
+        public int Row { get; private set; }
         
         internal MessageLoggedEventArgs(string msg, MessageImportance i, bool stop)
         {
