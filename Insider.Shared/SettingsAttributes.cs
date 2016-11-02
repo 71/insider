@@ -67,15 +67,5 @@ namespace Insider
         /// </summary>
         [DefaultSettingValue(true)]
         public bool CleanUp { get; set; }
-
-        /// <summary>
-        /// If <code>true</code>, <see cref="System.Diagnostics.Debugger.Launch"/>
-        /// will be called everytime <code>Weaver.Apply()</code> is called.
-        /// <para>
-        /// Default: <code>false</code>.
-        /// </para> 
-        /// </summary>
-        [DefaultSettingValue(false)]
-        public bool Debug { get; set; }
     }
 }

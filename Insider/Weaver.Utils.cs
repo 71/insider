@@ -16,10 +16,10 @@ namespace Insider
             bool willThrow = importance == MessageImportance.Error
                 || (importance == MessageImportance.Warning && TreatWarningsAsErrors);
 
-            MessageLogged?.Invoke(sender, new MessageLoggedEventArgs(msg, importance, willThrow));
-            
+            MessageLogged?.Invoke(new MessageLoggedEventArgs(msg, importance, willThrow, BeingProcessed, sender.GetType()));
+
             if (willThrow)
-                throw new WeavingException(sender, msg, importance);
+                throw new WeavingException(msg, BeingProcessed, sender.GetType());
         }
 
         /// <summary>

@@ -45,7 +45,7 @@ namespace Insider
         /// <summary>
         /// Event triggered when a weaver calls <see cref="WeaverAttribute.Log(string, MessageImportance)"/>.
         /// </summary>
-        public event EventHandler<MessageLoggedEventArgs> MessageLogged;
+        public event Action<MessageLoggedEventArgs> MessageLogged;
 
         /// <summary>
         /// Collection of all assemblies referenced, classed by name
@@ -70,7 +70,6 @@ namespace Insider
         private readonly bool SymbolsWereRead;
 
         public bool ShouldCleanUp => GetSetting($"{ASSEMBLY_NAME}.CleanUp", true);
-        public bool ShouldDebug => GetSetting($"{ASSEMBLY_NAME}.Debug", false);
 
         /// <summary>
         /// Initialize a new <see cref="Weaver"/>, given the path to the
@@ -108,6 +107,7 @@ namespace Insider
 
             Assemblies = new Dictionary<string, Tuple<SR.Assembly, AssemblyDefinition>>();
             Settings = new Dictionary<string, object>();
+            ModuleWeavers = new List<IModuleWeaver>();
 
             // Take care of assembly resolving errors, thanks to the given references
             AppDomain.CurrentDomain.AssemblyResolve += DomainAssemblyResolve;
@@ -165,14 +165,26 @@ namespace Insider
         /// <param name="assemblyPath">The path to the file in which the Assembly is located</param>
         private SR.Assembly ImportAssembly(string assemblyPath)
         {
-            return SR.Assembly.LoadFrom(assemblyPath);
+            switch (Path.GetFileName(assemblyPath))
+            {
+                case "Mono.Cecil.dll":
+                    return typeof(AssemblyDefinition).Assembly;
+                case "Mono.Cecil.Pdb.dll":
+                    return typeof(Mono.Cecil.Pdb.PdbReader).Assembly;
+                case "Mono.Cecil.Mdb.dll":
+                    return typeof(Mono.Cecil.Mdb.MdbReader).Assembly;
+                case "Mono.Cecil.Rocks.dll":
+                    return typeof(Mono.Cecil.Rocks.ILParser).Assembly;
+                default:
+                    return SR.Assembly.LoadFrom(assemblyPath);
+            }
         }
         
         /// <summary>
         /// Scan an <see cref="AssemblyDefinition"/>'s custom attributes
         /// for a <see cref="InsiderSettingAttribute"/>.
         /// </summary>
-        private void ImportAssemblySettings(AssemblyDefinition assembly, bool removeAttr = false)
+        private void ImportAssemblySettings(AssemblyDefinition assembly, bool mainAssembly = false)
         {
             bool cleanUp = ShouldCleanUp;
 
@@ -188,8 +200,21 @@ namespace Insider
                 {
                     Settings[(string)attr.ConstructorArguments[0].GetValue()] = attr.ConstructorArguments[1].GetValue();
 
-                    if (removeAttr && cleanUp)
+                    if (mainAssembly && cleanUp)
                         assembly.CustomAttributes.RemoveAt(i--);
+                }
+                else if (attr.AttributeType.Is<InsiderAttribute>(false))
+                {
+                    if (mainAssembly)
+                    {
+                        foreach (var field in attr.Fields)
+                            Settings[typeDef.Namespace + '.' + field.Name] = field.Argument.GetValue();
+                        foreach (var prop in attr.Properties)
+                            Settings[typeDef.Namespace + '.' + prop.Name] = prop.Argument.GetValue();
+
+                        if (mainAssembly && cleanUp)
+                            assembly.CustomAttributes.RemoveAt(i--);
+                    }
                 }
                 else if (Extends<InsiderSettingAttribute>(attr.AttributeType.AsTypeDefinition()))
                 {
@@ -198,7 +223,7 @@ namespace Insider
                     foreach (var prop in attr.Properties)
                         Settings[typeDef.Namespace + '.' + prop.Name] = prop.Argument.GetValue();
 
-                    if (removeAttr && cleanUp)
+                    if (mainAssembly && cleanUp)
                         assembly.CustomAttributes.RemoveAt(i--);
                 }
             }
@@ -289,6 +314,7 @@ namespace Insider
         {
             foreach (var assemblyPair in Assemblies.Values)
                 assemblyPair.Item2.Dispose();
+
             Module.Dispose();
         }
     }

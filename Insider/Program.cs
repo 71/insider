@@ -9,8 +9,6 @@ namespace Insider
 
         static int Main(string[] args)
         {
-            System.Diagnostics.Debugger.Launch();
-
             if (args.Length != 3)
             {
                 Console.Error.WriteLine("Usage: insider.exe [target] [save] [references]");
@@ -21,25 +19,24 @@ namespace Insider
                 return 1;
             }
 
-            using (Weaver weaver = Weaver.Create(args[0], args[1], args[2].Split(';')))
+            using (Outsider outsider = new Outsider(args[0], args[1], args[2].Split(';')))
             {
-                weaver.MessageLogged += MessageLogged;
+                outsider.Weaver.MessageLogged += MessageLogged;
 
                 try
                 {
-                    weaver.Process();
+                    outsider.Weaver.Process();
                 }
                 catch (Exception e)
                 {
                     EncounteredError = true;
-                    MessageLogged(null, new MessageLoggedEventArgs(e.Message, MessageImportance.Error, true));
                 }
             }
 
             return EncounteredError ? 1 : 0;
         }
 
-        private static void MessageLogged(object sender, MessageLoggedEventArgs e)
+        private static void MessageLogged(MessageLoggedEventArgs e)
         {
             string prefix = "";
 

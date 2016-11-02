@@ -21,26 +21,25 @@ namespace Insider
         {
             try
             {
-                using (Weaver weaver = Weaver.Create(TargetAssembly, TargetPath, TargetReferences.Split(';')))
+                using (Outsider outsider = new Outsider(TargetAssembly, TargetPath, TargetReferences.Split(';')))
                 {
-                    weaver.MessageLogged += MessageLogged;
-                    weaver.Process();
+                    outsider.Weaver.MessageLogged += MessageLogged;
+                    outsider.Weaver.Process();
                 }
             }
             catch (Exception e)
             {
                 EncounteredError = true;
-                MessageLogged(null, new MessageLoggedEventArgs(e.Message, MessageImportance.Error, true));
             }
             
             return !EncounteredError;
         }
 
-        private void MessageLogged(object sender, MessageLoggedEventArgs e)
+        private void MessageLogged(MessageLoggedEventArgs e)
         {
             if (e.StoppedWeaving)
             {
-                BuildEngine.LogErrorEvent(new BuildErrorEventArgs("Weaving", "W00", TargetAssembly, -1, -1, -1, -1, e.Message, "", sender.GetType().FullName));
+                BuildEngine.LogErrorEvent(new BuildErrorEventArgs("Weaving", "W00", TargetAssembly, -1, -1, -1, -1, e.Message, "", e.Target.GetType().FullName));
                 EncounteredError = true;
             }
             else
@@ -49,10 +48,10 @@ namespace Insider
                 {
                     case MessageImportance.Debug:
                     case MessageImportance.Info:
-                        BuildEngine.LogMessageEvent(new BuildMessageEventArgs(e.Message, "", sender.GetType().FullName, e.Importance == MessageImportance.Debug ? MBF.MessageImportance.Low : MBF.MessageImportance.Normal));
+                        BuildEngine.LogMessageEvent(new BuildMessageEventArgs(e.Message, "", e.Target.GetType().FullName, e.Importance == MessageImportance.Debug ? MBF.MessageImportance.Low : MBF.MessageImportance.Normal));
                         break;
                     case MessageImportance.Warning:
-                        BuildEngine.LogWarningEvent(new BuildWarningEventArgs("Weaving", "W00", TargetAssembly, -1, -1, -1, -1, e.Message, "", sender.GetType().FullName));
+                        BuildEngine.LogWarningEvent(new BuildWarningEventArgs("Weaving", "W00", TargetAssembly, -1, -1, -1, -1, e.Message, "", e.Target.GetType().FullName));
                         break;
                 }
             }

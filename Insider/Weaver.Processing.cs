@@ -8,6 +8,8 @@ namespace Insider
 {
     public sealed partial class Weaver : IDisposable
     {
+        private object BeingProcessed;
+
         /// <summary>
         /// Process every definition in the module.
         /// </summary>
@@ -18,9 +20,17 @@ namespace Insider
                 ProcessInternal();                
                 Module.Write(TargetPath);
             }
+            catch (WeavingException)
+            {
+                throw;
+            }
+            catch (IOException e)
+            {
+                throw new InsiderException($"Cannot access target file {TargetPath}. Make sure the intermediate directory is not in read-only mode", e);
+            }
             catch (Exception e)
             {
-                throw new WeavingException("Cannot access target file. Make sure the intermediate directory is not in read-only mode!", e);
+                throw new InsiderException("Unknown error encountered whilst processing an assembly", e);
             }
         }
 
@@ -130,9 +140,7 @@ namespace Insider
 
             // Create the attribute
             Type attrType = attr.AttributeType.AsType();
-            R.PropertyInfo logProp = attrType.GetProperty(nameof(WeaverAttribute.LogInternal), R.BindingFlags.NonPublic | R.BindingFlags.Instance);
-            R.PropertyInfo setProp = attrType.GetProperty(nameof(WeaverAttribute.Settings), R.BindingFlags.NonPublic | R.BindingFlags.Instance);
-            
+
             R.ConstructorInfo weaverCtor = attrType.GetConstructor(attr.ConstructorArguments.Select(x =>  x.Type.AsType()).ToArray());
             object weaver = weaverCtor.Invoke(attr.ConstructorArguments.Select(Weave.GetValue).ToArray());
 
@@ -143,26 +151,25 @@ namespace Insider
                 attrType.GetProperty(prop.Name).SetValue(weaver, prop.Argument.GetValue());
 
             // Add ability to log messages, and set settings
+            R.PropertyInfo logProp = attrType.GetProperty(nameof(WeaverAttribute.LogInternal), R.BindingFlags.NonPublic | R.BindingFlags.Instance);
+            R.PropertyInfo setProp = attrType.GetProperty(nameof(WeaverAttribute.Settings), R.BindingFlags.NonPublic | R.BindingFlags.Instance);
+
             if (LogMessageDelegate == null)
                 LogMessageDelegate = Delegate.CreateDelegate(logProp.PropertyType, this, nameof(Weaver.LogMessage));
 
             logProp.SetValue(weaver, LogMessageDelegate);
             setProp.SetValue(weaver, Settings);
-
+            
             // Invoke Weaver.Apply();
             try
             {
-                if ((bool)Settings[$"{ASSEMBLY_NAME}.{nameof(InsiderAttribute.Debug)}"])
-                    System.Diagnostics.Debugger.Launch();
-
-                LogMessage(weaver, $"Processing {(defs[0] as IMemberDefinition).FullName}...", MessageImportance.Debug);
-
+                BeingProcessed = defs[0];
                 R.MethodInfo method = attrType.GetMethod(nameof(IAssemblyWeaver.Apply), defs.Select(x => x.GetType()).ToArray());
                 method.Invoke(weaver, defs);
             }
             catch (Exception e)
             {
-                throw new WeavingException(weaver, e.Message, MessageImportance.Error);
+                throw new WeavingException(e, BeingProcessed, null);
             }
 
             // Clear attribute
@@ -184,6 +191,7 @@ namespace Insider
             R.PropertyInfo logProp = weaverType.GetProperty(nameof(WeaverAttribute.LogInternal), R.BindingFlags.NonPublic | R.BindingFlags.Instance);
             R.PropertyInfo setProp = weaverType.GetProperty(nameof(WeaverAttribute.Settings), R.BindingFlags.NonPublic | R.BindingFlags.Instance);
 
+            // Add ability to log messages
             if (LogMessageDelegate == null)
                 LogMessageDelegate = Delegate.CreateDelegate(logProp.PropertyType, this, nameof(Weaver.LogMessage));
 
@@ -193,14 +201,12 @@ namespace Insider
             // Invoke Weaver.Apply();
             try
             {
-                if ((bool)Settings[$"{ASSEMBLY_NAME}.{nameof(InsiderAttribute.Debug)}"])
-                    System.Diagnostics.Debugger.Launch();
-
+                BeingProcessed = Module;
                 weaver.Apply(Module, before ? ProcessingState.Before : ProcessingState.After);
             }
             catch (Exception e)
             {
-                throw new WeavingException(weaver, e.Message, MessageImportance.Error);
+                throw new WeavingException(e, Module, weaver.GetType());
             }
 
             // Clean up if this was declared in this assembly

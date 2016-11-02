@@ -71,15 +71,14 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Weaver.cs" />
-    <Compile Include="Weaver.Outsider.cs" />
-    <Compile Include="Weaver.Pdb.cs" />
+    <Compile Include="Outsider.cs" />
     <Compile Include="WeaveTask.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <Compile Include="Weaver.Processing.cs" />
-    <None Include="packages.config" />
     <Compile Include="Weaver.Utils.cs" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="..\Insider.Shared\Insider.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

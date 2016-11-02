@@ -5,85 +5,126 @@ using Mono.Cecil.Cil;
 namespace Insider
 {
     /// <summary>
-    /// Exception encountered whilst weaving an assembly.
+    /// Exception thrown internally whilst weaving an assembly.
     /// </summary>
 #if !PCL
     [Serializable]
 #endif
-    public class WeavingException : Exception
+    public class InsiderException : Exception
 #if !PCL
         , ISerializable
 #endif
     {
         /// <summary>
-        /// <see cref="WeaverAttribute"/> that sent the error.
+        /// Initialize a new exception encountered by the Insider
+        /// while processing the module.
         /// </summary>
-        public WeaverAttribute Sender { get; private set; }
-
-        /// <summary>
-        /// <code>true</code> if the message was <see cref="MessageImportance.Error"/>,
-        /// <code>false</code> otherwise.
-        /// </summary>
-        public bool IsError { get; private set; }
-
-        /// <summary>
-        /// Initialize a new exception thrown by a weaver.
-        /// </summary>
-        internal WeavingException(object sender, string msg, MessageImportance err) : base(msg)
+        internal InsiderException(string msg, Exception innerException) : base(msg, innerException)
         {
-            Sender = sender as WeaverAttribute;
-            IsError = err == MessageImportance.Error;
         }
 
         /// <summary>
-        /// Initialize a new exception encountered while processing the module.
+        /// Initialize a new exception encountered by the Insider
+        /// while processing the module.
         /// </summary>
-        internal WeavingException(string msg, Exception innerException) : base(msg, innerException)
+        internal InsiderException(string msg) : base(msg)
         {
-            Sender = null;
-            IsError = true;
         }
 
 #if !PCL
-        public WeavingException(SerializationInfo info, StreamingContext context)
-            : base(info.GetString("msg"), info.GetValue("inner", typeof(Exception)) as Exception)
+        public InsiderException(SerializationInfo info, StreamingContext context)
+            : base(info.GetString(nameof(Message)), info.GetValue(nameof(InnerException), typeof(Exception)) as Exception)
         {
-            IsError = info.GetBoolean("iserror");
-            Sender = info.GetValue("sender", typeof(WeaverAttribute)) as WeaverAttribute;
         }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            info.AddValue("iserror", IsError);
-            info.AddValue("sender", Sender, typeof(WeaverAttribute));
-            info.AddValue("msg", Message);
-            info.AddValue("inner", InnerException, typeof(Exception));
+            info.AddValue(nameof(Message), Message);
+            info.AddValue(nameof(InnerException), InnerException, typeof(Exception));
         }
 #endif
     }
 
     /// <summary>
-    /// Exception encountered whilst weaving an assembly,
-    /// precisely in a method called by the Insider.
+    /// Exception thrown by a 3rd party <see cref="WeaverAttribute"/>
+    /// whilst processing a member or declaration.
     /// </summary>
-//#if !PCL
-//    [Serializable]
-//#endif
-//    public class MethodWeavingException : WeavingException
-//#if !PCL
-//        , ISerializable
-//#endif
-//    {
-//        /// <summary>
-//        /// Debug information of the method that threw the error.
-//        /// </summary>
-//        public MethodDebugInformation DebugInformation { get; private set; }
+#if !PCL
+    [Serializable]
+#endif
+    public class WeavingException : InsiderException
+#if !PCL
+        , ISerializable
+#endif
+    {
+        /// <summary>
+        /// Debug information, if available, of the method that threw the error.
+        /// </summary>
+        public MethodDebugInformation DebugInformation { get; internal set; }
 
-//        public 
+        /// <summary>
+        /// Member or declaration being processed by the <see cref="Weaver"/>.
+        /// </summary>
+        public object Target { get; private set; }
 
-//        public MethodWeavingException() : base()
-//        {
+        /// <summary>
+        /// <see cref="Type"/> of the <see cref="WeaverAttribute"/> that threw the exception.
+        /// </summary>
+        public Type WeaverType { get; private set; }
 
-//        }
-//    }
+        /// <summary>
+        /// Indicates whether this <see cref="MethodWeavingException"/> was thrown
+        /// using <see cref="WeaverAttribute.Log(string, MessageImportance)"/>,
+        /// or by throwing an <see cref="Exception"/>.
+        /// <para>
+        /// <code>true</code> if this exception was thrown using
+        /// <see cref="WeaverAttribute.Log(string, MessageImportance)"/>,
+        /// <code>false</code> otherwise.
+        /// </para>
+        /// </summary>
+        public bool IsIntended { get; private set; }
+
+        /// <summary>
+        /// Initialize a new exception thrown by a 3rd party
+        /// method processing the module.
+        /// </summary>
+        internal WeavingException(string msg, object target, Type weaverType) : base(msg)
+        {
+            IsIntended = true;
+            Target = target;
+            WeaverType = weaverType;
+        }
+
+        /// <summary>
+        /// Initialize a new exception thrown by a 3rd party
+        /// method processing the module.
+        /// </summary>
+        internal WeavingException(Exception inner, object target, Type weaverType) : base(inner.Message, inner)
+        {
+            IsIntended = false;
+            Target = target;
+            WeaverType = weaverType;
+        }
+
+#if !PCL
+        public WeavingException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+            IsIntended = info.GetBoolean(nameof(IsIntended));
+            WeaverType = (Type)info.GetValue(nameof(WeaverType), typeof(Type));
+
+            Type targetType = (Type)info.GetValue("TargetType", typeof(Type));
+            Target = info.GetValue(nameof(Target), targetType);
+        }
+
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+
+            info.AddValue("TargetType", Target.GetType());
+            info.AddValue(nameof(WeaverType), WeaverType);
+            info.AddValue(nameof(IsIntended), IsIntended);
+            info.AddValue(nameof(Target), Target, Target.GetType());
+        }
+#endif
+    }
 }

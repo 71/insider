@@ -13,7 +13,7 @@ namespace Insider
         public string Message { get; private set; }
 
         /// <summary>
-        /// The importance of the message logged.
+        /// The importance of the logged message.
         /// </summary>
         public MessageImportance Importance { get; private set; }
 
@@ -28,17 +28,23 @@ namespace Insider
         /// </summary>
         public bool StoppedWeaving { get; private set; }
 
-        public string File { get; private set; }
+        /// <summary>
+        /// Member or declaration being processed.
+        /// </summary>
+        public object Target { get; private set; }
 
-        public int Column { get; private set; }
+        /// <summary>
+        /// Type of the <see cref="WeaverAttribute"/> that threw the exception.
+        /// </summary>
+        public Type WeaverType { get; private set; }
 
-        public int Row { get; private set; }
-        
-        internal MessageLoggedEventArgs(string msg, MessageImportance i, bool stop)
+        internal MessageLoggedEventArgs(string msg, MessageImportance i, bool stop, object target, Type attrType)
         {
             Message = msg;
             Importance = i;
             StoppedWeaving = stop;
+            WeaverType = attrType;
+            Target = target;
         }
     }
 }

@@ -21,6 +21,8 @@ namespace Insider.Tests
 
         public void Apply(MethodDefinition method)
         {
+            Log("Hello world", MessageImportance.Debug);
+
             foreach (var instr in method.Body.Instructions)
             {
                 if (instr.OpCode == From)
@@ -52,11 +54,17 @@ namespace Insider.Tests
             {
                 MakeTests();
                 Console.WriteLine("All tests passed successfully.");
+#if DEBUG
+                Console.ReadKey(true);
+#endif
                 return 0;
             }
             catch (ShouldAssertException e)
             {
                 Console.Error.WriteLine(e.Message);
+#if DEBUG
+                Console.ReadKey(true);
+#endif
                 return 1;
             }
         }
@@ -68,7 +76,7 @@ namespace Insider.Tests
             (int.Parse("1") + 1).ShouldNotBe(2);
         }
 
-        [Test("The insider will change the first string to another one")]
+        [Test("The insider will change the first string to 'I have been modified'")]
         [ChangeString]
         static void ChangeString()
         {
