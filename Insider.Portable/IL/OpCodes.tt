@@ -145,7 +145,6 @@ namespace Insider
             { "ldc.i4.7", "Push 7 onto the stack as int32." },
             { "ldc.i4.8", "Push 8 onto the stack as int32." },
             { "ldc.i4.m1", "Push -1 onto the stack as int32." },
-            { "ldc.i4.M1", "Push -1 of type int32 onto the stack as int32 (alias for ldc.i4.m1)." },
             { "ldc.i4.s <int8 (num)>", "Push num onto the stack as int32, short form." },
             { "ldc.i8 <int64 (num)>", "Push num of type int64 onto the stack as int64." },
             { "ldc.r4 <float32 (num)>", "Push num of type float32 onto the stack as F." },
@@ -193,7 +192,9 @@ namespace Insider
             { "ldsfld <field>", "Push the value of field on the stack." },
             { "ldsflda <field>", "Push the address of the static field, field, on the stack." },
             { "ldstr <string>", "Push a string object for the literal string." },
-            { "ldtoken <token>", "Convert metadata token to its runtime representation." },
+            { "ldtoken <type>", "Convert metadata token to its runtime representation." },
+            { "ldtoken <field>", "Convert metadata token to its runtime representation." },
+            { "ldtoken <method>", "Convert metadata token to its runtime representation." },
             { "ldvirtftn <method>", "Push address of virtual method on the stack." },
             { "leave <int32 (target)>", "Exit a protected region of code." },
             { "leave.s <int8 (target)>", "Exit a protected region of code, short form." },
@@ -262,7 +263,7 @@ namespace Insider
         };
         
         string[] blacklist = new []
-            { "Brinst", "Brnull", "Brzero", "Endfault", "Ldelem_U8", "Ldind_U8", "Unaligned" };
+            { "Brinst", "Brnull", "Brzero", "Endfault", "Ldelem_U8", "Ldind_U8", "Unaligned", "Stelem", "Ldelem" };
 
         Func<KeyValuePair<string, string>, string> Classify = (kvp) =>
         {
@@ -287,15 +288,21 @@ namespace Insider
                 return "FieldReference field";
             else if (ins.Contains("<method"))
                 return "MethodReference method";
-            else if (ins.Contains("<class"))
+            else if (ins.Contains("<class") || ins.Contains("<type") || ins.Contains("<valuetype") || ins.Contains("<thisType"))
                 return "TypeReference type";
+            else if (ins.Contains("<ctor"))
+                return "MethodReference ctor";
+            else if (ins.Contains("<etype"))
+                return "TypeReference itemType";
+            else if (ins.Contains("<etype"))
+                return "TypeReference itemType";
 
             else if (ins.Contains("<param"))
                 return "ParameterDefinition parameter";
             else if (ins.Contains("<var"))
                 return "VariableDefinition variable";
 
-            else if (ins.Contains("<call"))
+            else if (ins.Contains("<callsitedescr"))
                 return "CallSite call";
             else if (ins.Contains("<ins"))
                 return "Instruction ins";
@@ -345,6 +352,7 @@ namespace Insider
                 <#
             }
         #>
+
         #endregion // <#=ins.Key#>
         <#
         }

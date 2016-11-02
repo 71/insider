@@ -688,116 +688,6 @@ namespace Insider
                 
         /// <summary>
         /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Ldelem_I"/>.
-        /// <para>
-        /// Load the element with type native int at index onto the top of the stack as a native int.
-        /// </para>
-        /// </summary>
-        public static Instruction Ldelem_I()
-            => Instruction.Create(OpCodes.Ldelem_I);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Ldelem_I1"/>.
-        /// <para>
-        /// Load the element with type int8 at index onto the top of the stack as an int32.
-        /// </para>
-        /// </summary>
-        public static Instruction Ldelem_I1()
-            => Instruction.Create(OpCodes.Ldelem_I1);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Ldelem_I2"/>.
-        /// <para>
-        /// Load the element with type int16 at index onto the top of the stack as an int32.
-        /// </para>
-        /// </summary>
-        public static Instruction Ldelem_I2()
-            => Instruction.Create(OpCodes.Ldelem_I2);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Ldelem_I4"/>.
-        /// <para>
-        /// Load the element with type int32 at index onto the top of the stack as an int32.
-        /// </para>
-        /// </summary>
-        public static Instruction Ldelem_I4()
-            => Instruction.Create(OpCodes.Ldelem_I4);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Ldelem_I8"/>.
-        /// <para>
-        /// Load the element with type int64 at index onto the top of the stack as an int64.
-        /// </para>
-        /// </summary>
-        public static Instruction Ldelem_I8()
-            => Instruction.Create(OpCodes.Ldelem_I8);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Ldelem_R4"/>.
-        /// <para>
-        /// Load the element with type float32 at index onto the top of the stack as an F
-        /// </para>
-        /// </summary>
-        public static Instruction Ldelem_R4()
-            => Instruction.Create(OpCodes.Ldelem_R4);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Ldelem_R8"/>.
-        /// <para>
-        /// Load the element with type float64 at index onto the top of the stack as an F.
-        /// </para>
-        /// </summary>
-        public static Instruction Ldelem_R8()
-            => Instruction.Create(OpCodes.Ldelem_R8);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Ldelem_Ref"/>.
-        /// <para>
-        /// Load the element at index onto the top of the stack as an O. The type of the O is the same as the element type of the array pushed on the CIL stack.
-        /// </para>
-        /// </summary>
-        public static Instruction Ldelem_Ref()
-            => Instruction.Create(OpCodes.Ldelem_Ref);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Ldelem_U1"/>.
-        /// <para>
-        /// Load the element with type unsigned int8 at index onto the top of the stack as an int32.
-        /// </para>
-        /// </summary>
-        public static Instruction Ldelem_U1()
-            => Instruction.Create(OpCodes.Ldelem_U1);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Ldelem_U2"/>.
-        /// <para>
-        /// Load the element with type unsigned int16 at index onto the top of the stack as an int32.
-        /// </para>
-        /// </summary>
-        public static Instruction Ldelem_U2()
-            => Instruction.Create(OpCodes.Ldelem_U2);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Ldelem_U4"/>.
-        /// <para>
-        /// Load the element with type unsigned int32 at index onto the top of the stack as an int32.
-        /// </para>
-        /// </summary>
-        public static Instruction Ldelem_U4()
-            => Instruction.Create(OpCodes.Ldelem_U4);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
         /// <see cref="OpCodes.Ldind_I"/>.
         /// <para>
         /// Indirect load value of type native int as native int on the stack
@@ -1148,86 +1038,6 @@ namespace Insider
                 
         /// <summary>
         /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Stelem_I"/>.
-        /// <para>
-        /// Replace array element at index with the i value on the stack.
-        /// </para>
-        /// </summary>
-        public static Instruction Stelem_I()
-            => Instruction.Create(OpCodes.Stelem_I);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Stelem_I1"/>.
-        /// <para>
-        /// Replace array element at index with the int8 value on the stack.
-        /// </para>
-        /// </summary>
-        public static Instruction Stelem_I1()
-            => Instruction.Create(OpCodes.Stelem_I1);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Stelem_I2"/>.
-        /// <para>
-        /// Replace array element at index with the int16 value on the stack.
-        /// </para>
-        /// </summary>
-        public static Instruction Stelem_I2()
-            => Instruction.Create(OpCodes.Stelem_I2);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Stelem_I4"/>.
-        /// <para>
-        /// Replace array element at index with the int32 value on the stack.
-        /// </para>
-        /// </summary>
-        public static Instruction Stelem_I4()
-            => Instruction.Create(OpCodes.Stelem_I4);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Stelem_I8"/>.
-        /// <para>
-        /// Replace array element at index with the int64 value on the stack.
-        /// </para>
-        /// </summary>
-        public static Instruction Stelem_I8()
-            => Instruction.Create(OpCodes.Stelem_I8);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Stelem_R4"/>.
-        /// <para>
-        /// Replace array element at index with the float32 value on the stack.
-        /// </para>
-        /// </summary>
-        public static Instruction Stelem_R4()
-            => Instruction.Create(OpCodes.Stelem_R4);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Stelem_R8"/>.
-        /// <para>
-        /// Replace array element at index with the float64 value on the stack.
-        /// </para>
-        /// </summary>
-        public static Instruction Stelem_R8()
-            => Instruction.Create(OpCodes.Stelem_R8);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Stelem_Ref"/>.
-        /// <para>
-        /// Replace array element at index with the ref value on the stack.
-        /// </para>
-        /// </summary>
-        public static Instruction Stelem_Ref()
-            => Instruction.Create(OpCodes.Stelem_Ref);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
         /// <see cref="OpCodes.Stind_I"/>.
         /// <para>
         /// Store value of type native int into memory at address
@@ -1415,7 +1225,8 @@ namespace Insider
         /// </summary>
         public static Instruction Xor()
             => Instruction.Create(OpCodes.Xor);
-                        #endregion // 
+                
+        #endregion // 
         
         #region int nbr
             
@@ -1568,7 +1379,8 @@ namespace Insider
         /// </summary>
         public static Instruction Leave(int nbr)
             => Instruction.Create(OpCodes.Leave, nbr);
-                        #endregion // int nbr
+                
+        #endregion // int nbr
         
         #region sbyte nbr
             
@@ -1721,7 +1533,152 @@ namespace Insider
         /// </summary>
         public static Instruction Leave_S(sbyte nbr)
             => Instruction.Create(OpCodes.Leave_S, nbr);
-                        #endregion // sbyte nbr
+                
+        #endregion // sbyte nbr
+        
+        #region TypeReference type
+            
+        /// <summary>
+        /// Create a new <see cref="Instruction"/> which emits
+        /// <see cref="OpCodes.Box"/>.
+        /// <para>
+        /// Convert a boxable value to its boxed form
+        /// </para>
+        /// </summary>
+        public static Instruction Box(TypeReference type)
+            => Instruction.Create(OpCodes.Box, type);
+                
+        /// <summary>
+        /// Create a new <see cref="Instruction"/> which emits
+        /// <see cref="OpCodes.Castclass"/>.
+        /// <para>
+        /// Cast obj to class.
+        /// </para>
+        /// </summary>
+        public static Instruction Castclass(TypeReference type)
+            => Instruction.Create(OpCodes.Castclass, type);
+                
+        /// <summary>
+        /// Create a new <see cref="Instruction"/> which emits
+        /// <see cref="OpCodes.Constrained"/>.
+        /// <para>
+        /// Call a virtual method on a type constrained to be type T
+        /// </para>
+        /// </summary>
+        public static Instruction Constrained(TypeReference type)
+            => Instruction.Create(OpCodes.Constrained, type);
+                
+        /// <summary>
+        /// Create a new <see cref="Instruction"/> which emits
+        /// <see cref="OpCodes.Cpobj"/>.
+        /// <para>
+        /// Copy a value type from src to dest.
+        /// </para>
+        /// </summary>
+        public static Instruction Cpobj(TypeReference type)
+            => Instruction.Create(OpCodes.Cpobj, type);
+                
+        /// <summary>
+        /// Create a new <see cref="Instruction"/> which emits
+        /// <see cref="OpCodes.Initobj"/>.
+        /// <para>
+        /// Initialize the value at address dest.
+        /// </para>
+        /// </summary>
+        public static Instruction Initobj(TypeReference type)
+            => Instruction.Create(OpCodes.Initobj, type);
+                
+        /// <summary>
+        /// Create a new <see cref="Instruction"/> which emits
+        /// <see cref="OpCodes.Isinst"/>.
+        /// <para>
+        /// Test if obj is an instance of class, returning null or an instance of that class or interface.
+        /// </para>
+        /// </summary>
+        public static Instruction Isinst(TypeReference type)
+            => Instruction.Create(OpCodes.Isinst, type);
+                
+        /// <summary>
+        /// Create a new <see cref="Instruction"/> which emits
+        /// <see cref="OpCodes.Ldobj"/>.
+        /// <para>
+        /// Copy the value stored at address src to the stack.
+        /// </para>
+        /// </summary>
+        public static Instruction Ldobj(TypeReference type)
+            => Instruction.Create(OpCodes.Ldobj, type);
+                
+        /// <summary>
+        /// Create a new <see cref="Instruction"/> which emits
+        /// <see cref="OpCodes.Ldtoken"/>.
+        /// <para>
+        /// Convert metadata token to its runtime representation.
+        /// </para>
+        /// </summary>
+        public static Instruction Ldtoken(TypeReference type)
+            => Instruction.Create(OpCodes.Ldtoken, type);
+                
+        /// <summary>
+        /// Create a new <see cref="Instruction"/> which emits
+        /// <see cref="OpCodes.Mkrefany"/>.
+        /// <para>
+        /// Push a typed reference to ptr of type class onto the stack.
+        /// </para>
+        /// </summary>
+        public static Instruction Mkrefany(TypeReference type)
+            => Instruction.Create(OpCodes.Mkrefany, type);
+                
+        /// <summary>
+        /// Create a new <see cref="Instruction"/> which emits
+        /// <see cref="OpCodes.Refanyval"/>.
+        /// <para>
+        /// Push the address stored in a typed reference.
+        /// </para>
+        /// </summary>
+        public static Instruction Refanyval(TypeReference type)
+            => Instruction.Create(OpCodes.Refanyval, type);
+                
+        /// <summary>
+        /// Create a new <see cref="Instruction"/> which emits
+        /// <see cref="OpCodes.Sizeof"/>.
+        /// <para>
+        /// Push the size, in bytes, of a type as an unsigned int32.
+        /// </para>
+        /// </summary>
+        public static Instruction Sizeof(TypeReference type)
+            => Instruction.Create(OpCodes.Sizeof, type);
+                
+        /// <summary>
+        /// Create a new <see cref="Instruction"/> which emits
+        /// <see cref="OpCodes.Stobj"/>.
+        /// <para>
+        /// Store a value of type typeTok at an address.
+        /// </para>
+        /// </summary>
+        public static Instruction Stobj(TypeReference type)
+            => Instruction.Create(OpCodes.Stobj, type);
+                
+        /// <summary>
+        /// Create a new <see cref="Instruction"/> which emits
+        /// <see cref="OpCodes.Unbox"/>.
+        /// <para>
+        /// Extract a value-type from obj, its boxed representation.
+        /// </para>
+        /// </summary>
+        public static Instruction Unbox(TypeReference type)
+            => Instruction.Create(OpCodes.Unbox, type);
+                
+        /// <summary>
+        /// Create a new <see cref="Instruction"/> which emits
+        /// <see cref="OpCodes.Unbox_Any"/>.
+        /// <para>
+        /// Extract a value-type from obj, its boxed representation
+        /// </para>
+        /// </summary>
+        public static Instruction Unbox_Any(TypeReference type)
+            => Instruction.Create(OpCodes.Unbox_Any, type);
+                
+        #endregion // TypeReference type
         
         #region MethodReference method
             
@@ -1767,6 +1724,16 @@ namespace Insider
                 
         /// <summary>
         /// Create a new <see cref="Instruction"/> which emits
+        /// <see cref="OpCodes.Ldtoken"/>.
+        /// <para>
+        /// Convert metadata token to its runtime representation.
+        /// </para>
+        /// </summary>
+        public static Instruction Ldtoken(MethodReference method)
+            => Instruction.Create(OpCodes.Ldtoken, method);
+                
+        /// <summary>
+        /// Create a new <see cref="Instruction"/> which emits
         /// <see cref="OpCodes.Ldvirtftn"/>.
         /// <para>
         /// Push address of virtual method on the stack.
@@ -1774,7 +1741,8 @@ namespace Insider
         /// </summary>
         public static Instruction Ldvirtftn(MethodReference method)
             => Instruction.Create(OpCodes.Ldvirtftn, method);
-                        #endregion // MethodReference method
+                
+        #endregion // MethodReference method
         
         #region CallSite call
             
@@ -1787,50 +1755,8 @@ namespace Insider
         /// </summary>
         public static Instruction Calli(CallSite call)
             => Instruction.Create(OpCodes.Calli, call);
-                        #endregion // CallSite call
-        
-        #region TypeReference type
-            
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Castclass"/>.
-        /// <para>
-        /// Cast obj to class.
-        /// </para>
-        /// </summary>
-        public static Instruction Castclass(TypeReference type)
-            => Instruction.Create(OpCodes.Castclass, type);
                 
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Isinst"/>.
-        /// <para>
-        /// Test if obj is an instance of class, returning null or an instance of that class or interface.
-        /// </para>
-        /// </summary>
-        public static Instruction Isinst(TypeReference type)
-            => Instruction.Create(OpCodes.Isinst, type);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Ldelema"/>.
-        /// <para>
-        /// Load the address of element at index onto the top of the stack.
-        /// </para>
-        /// </summary>
-        public static Instruction Ldelema(TypeReference type)
-            => Instruction.Create(OpCodes.Ldelema, type);
-                
-        /// <summary>
-        /// Create a new <see cref="Instruction"/> which emits
-        /// <see cref="OpCodes.Mkrefany"/>.
-        /// <para>
-        /// Push a typed reference to ptr of type class onto the stack.
-        /// </para>
-        /// </summary>
-        public static Instruction Mkrefany(TypeReference type)
-            => Instruction.Create(OpCodes.Mkrefany, type);
-                        #endregion // TypeReference type
+        #endregion // CallSite call
         
         #region byte nbr
             
@@ -1893,7 +1819,8 @@ namespace Insider
         /// </summary>
         public static Instruction Stloc_S(byte nbr)
             => Instruction.Create(OpCodes.Stloc_S, nbr);
-                        #endregion // byte nbr
+                
+        #endregion // byte nbr
         
         #region long nbr
             
@@ -1906,7 +1833,8 @@ namespace Insider
         /// </summary>
         public static Instruction Ldc_I8(long nbr)
             => Instruction.Create(OpCodes.Ldc_I8, nbr);
-                        #endregion // long nbr
+                
+        #endregion // long nbr
         
         #region float nbr
             
@@ -1919,7 +1847,8 @@ namespace Insider
         /// </summary>
         public static Instruction Ldc_R4(float nbr)
             => Instruction.Create(OpCodes.Ldc_R4, nbr);
-                        #endregion // float nbr
+                
+        #endregion // float nbr
         
         #region double nbr
             
@@ -1932,7 +1861,8 @@ namespace Insider
         /// </summary>
         public static Instruction Ldc_R8(double nbr)
             => Instruction.Create(OpCodes.Ldc_R8, nbr);
-                        #endregion // double nbr
+                
+        #endregion // double nbr
         
         #region FieldReference field
             
@@ -1978,6 +1908,16 @@ namespace Insider
                 
         /// <summary>
         /// Create a new <see cref="Instruction"/> which emits
+        /// <see cref="OpCodes.Ldtoken"/>.
+        /// <para>
+        /// Convert metadata token to its runtime representation.
+        /// </para>
+        /// </summary>
+        public static Instruction Ldtoken(FieldReference field)
+            => Instruction.Create(OpCodes.Ldtoken, field);
+                
+        /// <summary>
+        /// Create a new <see cref="Instruction"/> which emits
         /// <see cref="OpCodes.Stfld"/>.
         /// <para>
         /// Replace the value of field of the object obj with value.
@@ -1995,7 +1935,8 @@ namespace Insider
         /// </summary>
         public static Instruction Stsfld(FieldReference field)
             => Instruction.Create(OpCodes.Stsfld, field);
-                        #endregion // FieldReference field
+                
+        #endregion // FieldReference field
         
         #region string str
             
@@ -2008,7 +1949,36 @@ namespace Insider
         /// </summary>
         public static Instruction Ldstr(string str)
             => Instruction.Create(OpCodes.Ldstr, str);
-                        #endregion // string str
+                
+        #endregion // string str
+        
+        #region TypeReference itemType
+            
+        /// <summary>
+        /// Create a new <see cref="Instruction"/> which emits
+        /// <see cref="OpCodes.Newarr"/>.
+        /// <para>
+        /// Create a new array with elements of type etype.
+        /// </para>
+        /// </summary>
+        public static Instruction Newarr(TypeReference itemType)
+            => Instruction.Create(OpCodes.Newarr, itemType);
+                
+        #endregion // TypeReference itemType
+        
+        #region MethodReference ctor
+            
+        /// <summary>
+        /// Create a new <see cref="Instruction"/> which emits
+        /// <see cref="OpCodes.Newobj"/>.
+        /// <para>
+        /// Allocate an uninitialized object or value type and call ctor.
+        /// </para>
+        /// </summary>
+        public static Instruction Newobj(MethodReference ctor)
+            => Instruction.Create(OpCodes.Newobj, ctor);
+                
+        #endregion // MethodReference ctor
         
     }
 }
