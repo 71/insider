@@ -27,6 +27,11 @@ namespace Insider
         /// </summary>
         public static AssemblyDefinition CurrentAssemblyDef { get; internal set; }
 
+        /// <summary>
+        /// Dictionary containing all settings set by the user.
+        /// </summary>
+        public static IReadOnlyDictionary<string, object> Settings { get; internal set; }
+
 
         /// <summary>
         /// Attempt to convert the given <see cref="TypeReference"/> to
@@ -110,6 +115,24 @@ namespace Insider
             while (value is CustomAttributeArgument)
                 value = ((CustomAttributeArgument)value).Value;
             return value;
+        }
+
+
+        /// <summary>
+        /// Get the setting named <paramref name="key"/>, cast
+        /// it to <typeparamref name="T"/> if possible,
+        /// and return it.
+        /// <para>
+        /// If any of the above steps fails, <paramref name="defaultValue"/>
+        /// will be returned.
+        /// </para>
+        /// </summary>
+        public static T GetSetting<T>(string key, T defaultValue = default(T))
+        {
+            object value;
+            if (Settings.TryGetValue(key, out value) && value is T)
+                return (T)value;
+            return defaultValue;
         }
     }
 }

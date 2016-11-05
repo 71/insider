@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
+using Mono.Cecil;
 
 namespace Insider
 {
@@ -19,7 +21,17 @@ namespace Insider
         /// Dictionary containing all settings set by the user with the
         /// <see cref="InsiderSettingAttribute"/>.
         /// </summary>
-        protected internal IReadOnlyDictionary<string, object> Settings { get; internal set; }
+        protected IReadOnlyDictionary<string, object> Settings => Weave.Settings;
+
+        /// <summary>
+        /// <see cref="AssemblyDefinition"/> of the <see cref="Assembly"/> being modified.
+        /// </summary>
+        protected AssemblyDefinition CurrentAssemblyDef => Weave.CurrentAssemblyDef;
+
+        /// <summary>
+        /// <see cref="Assembly"/> being modified.
+        /// </summary>
+        protected Assembly CurrentAssembly => Weave.CurrentAssembly;
 
         /// <summary>
         /// Log a message to the build process.

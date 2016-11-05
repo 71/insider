@@ -152,13 +152,11 @@ namespace Insider
 
             // Add ability to log messages, and set settings
             R.PropertyInfo logProp = attrType.GetProperty(nameof(WeaverAttribute.LogInternal), R.BindingFlags.NonPublic | R.BindingFlags.Instance);
-            R.PropertyInfo setProp = attrType.GetProperty(nameof(WeaverAttribute.Settings), R.BindingFlags.NonPublic | R.BindingFlags.Instance);
 
             if (LogMessageDelegate == null)
                 LogMessageDelegate = Delegate.CreateDelegate(logProp.PropertyType, this, nameof(Weaver.LogMessage));
 
             logProp.SetValue(weaver, LogMessageDelegate);
-            setProp.SetValue(weaver, Settings);
             
             // Invoke Weaver.Apply();
             try
@@ -189,14 +187,12 @@ namespace Insider
         {
             // If we got this far, (weaver is IModuleWeaver && weaver is WeaverAttribute) == true.
             R.PropertyInfo logProp = weaverType.GetProperty(nameof(WeaverAttribute.LogInternal), R.BindingFlags.NonPublic | R.BindingFlags.Instance);
-            R.PropertyInfo setProp = weaverType.GetProperty(nameof(WeaverAttribute.Settings), R.BindingFlags.NonPublic | R.BindingFlags.Instance);
 
             // Add ability to log messages
             if (LogMessageDelegate == null)
                 LogMessageDelegate = Delegate.CreateDelegate(logProp.PropertyType, this, nameof(Weaver.LogMessage));
 
             logProp.SetValue(weaver, LogMessageDelegate);
-            setProp.SetValue(weaver, Settings);
 
             // Invoke Weaver.Apply();
             try
