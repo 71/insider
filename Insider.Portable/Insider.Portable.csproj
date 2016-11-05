@@ -44,6 +44,7 @@
       <LastGenOutput>OpCodes1.cs</LastGenOutput>
     </Content>
     <Compile Include="IL\Emit.cs" />
+    <Compile Include="IL\OpCodes.Specialized.cs" />
     <Compile Include="IL\OpCodes1.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
