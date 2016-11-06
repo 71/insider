@@ -16,6 +16,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Weavers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Weave\Compare.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Weave\Convert.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Weave\Events.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Weave\Main.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Weave\Search.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WeavingExceptions.cs" />

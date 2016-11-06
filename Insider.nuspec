@@ -4,7 +4,7 @@
   
     <id>Insider</id>
     <title>Insider</title>
-    <version>0.9.0-pre-v4</version>
+    <version>0.9.0-pre-v5</version>
     <authors>Jee</authors>
     <owners>Jee</owners>
     <licenseUrl>http://www.opensource.org/licenses/mit-license.php</licenseUrl>
@@ -13,7 +13,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>The easy way to modify an assembly from the inside, using Mono.Cecil.</description>
     <summary>Insider allows you to seamlessly edit an assembly and all its content directly from the inside.</summary>
-    <releaseNotes>Improved Insider.IL class, added docs</releaseNotes>
+    <releaseNotes>Added events, improved IL</releaseNotes>
     <copyright>Copyright (C) Grégoire GEIS 2016</copyright>
     <tags>mono cecil il weaving weave assembly reflection injection insider</tags>
     

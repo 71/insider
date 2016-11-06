@@ -55,6 +55,8 @@ namespace Insider
                     for (int i = 0; i < fieldDef.CustomAttributes.Count; i++)
                         if (ProcessAny<IFieldWeaver>(fieldDef.CustomAttributes[i], fieldDef) && cleanUp)
                             i--;
+
+                    Weave.TriggerScan(fieldDef);
                 }
 
                 // Process properties
@@ -63,6 +65,8 @@ namespace Insider
                     for (int i = 0; i < propDef.CustomAttributes.Count; i++)
                         if (ProcessAny<IPropertyWeaver>(propDef.CustomAttributes[i], propDef) && cleanUp)
                             i--;
+
+                    Weave.TriggerScan(propDef);
                 }
 
                 // Process events
@@ -71,6 +75,8 @@ namespace Insider
                     for (int i = 0; i < eventDef.CustomAttributes.Count; i++)
                         if (ProcessAny<IEventWeaver>(eventDef.CustomAttributes[i], eventDef) && cleanUp)
                             i--;
+
+                    Weave.TriggerScan(eventDef);
                 }
 
                 // Process methods
@@ -82,23 +88,30 @@ namespace Insider
                         for (int i = 0; i < paramDef.CustomAttributes.Count; i++)
                             if (ProcessAny<IParameterWeaver>(paramDef.CustomAttributes[i], paramDef, methodDef) && cleanUp)
                                 i--;
+
+                        Weave.TriggerScan(paramDef, methodDef);
                     }
 
                     for (int i = 0; i < methodDef.CustomAttributes.Count; i++)
                         if (ProcessAny<IMethodWeaver>(methodDef.CustomAttributes[i], methodDef) && cleanUp)
                             i--;
+
+                    Weave.TriggerScan(methodDef);
                 }
 
                 for (int i = 0; i < typeDef.CustomAttributes.Count; i++)
                     if (ProcessAny<ITypeWeaver>(typeDef.CustomAttributes[i], typeDef) && cleanUp)
                         i--;
+
+                Weave.TriggerScan(typeDef);
             }
 
             // Process module
             foreach (IModuleWeaver weaver in ModuleWeavers)
                 ProcessModuleWeaver(weaver.GetType(), weaver, false);
 
-
+            Weave.TriggerScan(Module.Assembly);
+            
             if (cleanUp)
             {
                 // Remove attribute definition

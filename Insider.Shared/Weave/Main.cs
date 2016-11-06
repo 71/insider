@@ -134,5 +134,13 @@ namespace Insider
                 return (T)value;
             return defaultValue;
         }
+
+        /// <summary>
+        /// Returns whether or not a given method is marked external.
+        /// </summary>
+        public static bool IsExternal(this MethodDefinition method)
+        {
+            return method.RVA == 0;
+        }
     }
 }

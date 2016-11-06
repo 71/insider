@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Mono.Cecil.Cil;
@@ -10,18 +8,45 @@ namespace Insider.Extensions
     public static partial class IL
     {
         #region Load
+        /// <summary>
+        /// Push <code>null</code> into the stack.
+        /// </summary>
+        public static Instruction Load()
+            => Instruction.Create(OpCodes.Ldnull);
+
+        /// <summary>
+        /// Push a <see cref="string"/> into the stack.
+        /// </summary>
         public static Instruction Load(string arg)
             => Instruction.Create(OpCodes.Ldstr, arg);
 
+        /// <summary>
+        /// Push a <see cref="double"/> into the stack.
+        /// </summary>
         public static Instruction Load(double arg)
             => Instruction.Create(OpCodes.Ldc_R8, arg);
 
+        /// <summary>
+        /// Push a <see cref="float"/> into the stack.
+        /// </summary>
         public static Instruction Load(float arg)
             => Instruction.Create(OpCodes.Ldc_R4, arg);
 
+        /// <summary>
+        /// Push a <see cref="bool"/> into the stack.
+        /// </summary>
         public static Instruction Load(bool arg)
             => Instruction.Create(arg ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
 
+        /// <summary>
+        /// Push a <see cref="long"/> into the stack.
+        /// </summary>
+        public static Instruction Load(long arg)
+            => Instruction.Create(OpCodes.Ldc_I8, arg);
+
+        /// <summary>
+        /// Push an <see cref="int"/> into the stack.
+        /// </summary>
         public static Instruction Load(int arg)
         {
             switch (arg)
@@ -51,6 +76,9 @@ namespace Insider.Extensions
             }
         }
 
+        /// <summary>
+        /// Push the nth method argument into the stack.
+        /// </summary>
         public static Instruction LoadArg(int nthArg)
         {
             switch (nthArg)
@@ -69,6 +97,29 @@ namespace Insider.Extensions
                 return Instruction.Create(OpCodes.Ldarg_S, (byte)nthArg);
             else
                 return Instruction.Create(OpCodes.Ldarg, nthArg);
+        }
+
+        /// <summary>
+        /// Push the nth local variable into the stack.
+        /// </summary>
+        public static Instruction LoadVar(int nthLocalVar)
+        {
+            switch (nthLocalVar)
+            {
+                case 0:
+                    return Instruction.Create(OpCodes.Ldloc_0);
+                case 1:
+                    return Instruction.Create(OpCodes.Ldloc_1);
+                case 2:
+                    return Instruction.Create(OpCodes.Ldloc_2);
+                case 3:
+                    return Instruction.Create(OpCodes.Ldloc_3);
+            }
+
+            if (nthLocalVar <= byte.MaxValue)
+                return Instruction.Create(OpCodes.Ldloc_S, (byte)nthLocalVar);
+            else
+                return Instruction.Create(OpCodes.Ldloc, nthLocalVar);
         }
 
         /// <summary>

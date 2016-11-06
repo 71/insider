@@ -140,5 +140,23 @@ namespace Insider
                 return result.Item1;
             return null;
         }
+
+        /// <summary>
+        /// Initialize an attribute of type <typeparamref name="T"/>
+        /// given its compiled <see cref="Mono.Cecil.CustomAttribute"/> representation.
+        /// </summary>
+        public static T Construct<T>(this CustomAttribute customAttr) where T : Attribute
+        {
+            object attr = customAttr.Constructor.AsMethodInfo().Invoke(null, customAttr.ConstructorArguments.Select(GetValue).ToArray());
+            Type attrType = attr.GetType();
+
+            foreach (var field in customAttr.Fields)
+                attrType.GetRuntimeField(field.Name).SetValue(attr, field.Argument.GetValue());
+
+            foreach (var prop in customAttr.Properties)
+                attrType.GetRuntimeProperty(prop.Name).SetValue(attr, prop.Argument.GetValue());
+
+            return (T)attr;
+        }
     }
 }
