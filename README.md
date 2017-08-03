@@ -2,6 +2,13 @@
 Insider uses [MSBuild](https://github.com/Microsoft/msbuild) and [Mono.Cecil](https://github.com/jbevain/cecil) to weave assemblies (although the former is optional).  
 Unlike other programs that do the same thing, however, Insider changes things from the _inside_.
 
+# Warning
+Insider has been superseded by [Cometary](https://github.com/6A/Cometary), please check it out instead.
+
+-------
+
+# Old documentation
+
 ## One-minute guide
 ```csharp
 using System;
